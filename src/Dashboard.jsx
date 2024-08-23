@@ -159,85 +159,85 @@ const RightSideContainer = styled.div`
 `;
 
 const Dashboard = () => {
-    const navigate = useNavigate();
-    const location = useLocation();
-    const username = location.state?.username || 'User';
+  const navigate = useNavigate();
+  const location = useLocation();
+  const username = location.state?.username || 'User';
 
-    const handleLogout = () => {
-        navigate('/');
-    };
+  const handleLogout = () => {
+    navigate('/');
+  };
 
-    return (
-        <DashboardContainer>
-            <Navbar>
-                <Logo src={logo} alt="Logo" />
-                <NavLinks>
-                    <NavLink>Trips</NavLink>
-                    <NavLink>Expenses</NavLink>
-                    <NavLink>Reports</NavLink>
-                    <NavLink>Customers</NavLink>
-                    <NavLink>PRT</NavLink>
-                    <NavLink>Admin</NavLink>
-                    <NavLink>About</NavLink>
-                </NavLinks>
-                <Welcome>
-                    <span>Welcome, {username}</span>
-                    <Button color="#28a745" hoverColor="#218838" onClick={handleLogout}>
-                        Logout
-                    </Button>
-                </Welcome>
-            </Navbar>
+  return (
+    <DashboardContainer>
+      <Navbar>
 
-            <ContentContainer>
-                <FormContainer>
-                    <DateGroup>
-                        <FormGroup>
-                            <DateInputWrapper>
-                                <label>From</label>
-                                <Input type="date" defaultValue="2024-08-01" />
-                            </DateInputWrapper>
-                        </FormGroup>
-                        <FormGroup>
-                            <DateInputWrapper>
-                                <label>To</label>
-                                <Input type="date" defaultValue="2024-08-22" />
-                            </DateInputWrapper>
-                        </FormGroup>
-                    </DateGroup>
-                    <FormGroup>
-                        <Input type="text" placeholder="Enter customer name" />
-                    </FormGroup>
-                    <FormGroup>
-                        <Input type="text" placeholder="Enter C/O name" />
-                    </FormGroup>
-                    <FormGroup>
-                        <Input type="text" placeholder="Enter driver name" />
-                    </FormGroup>
-                    <FormGroup>
-                        <Input type="text" placeholder="Enter truck details" />
-                    </FormGroup>
-                    <FormGroup>
-                        <Input type="text" placeholder="Enter origin location" />
-                    </FormGroup>
-                    <FormGroup>
-                        <Input type="text" placeholder="Enter destination" />
-                    </FormGroup>
-                    <ButtonGroup>
-                        <Button color="#17a2b8" hoverColor="#138496">
-                            <FaSearch /> Search
-                        </Button>
-                        <Button color="#343a40" hoverColor="#23272b">
-                            <FaFileExport /> Export
-                        </Button>
-                    </ButtonGroup>
-                </FormContainer>
+        <NavLinks>
+          <NavLink>Trips</NavLink>
+          <NavLink>Expenses</NavLink>
+          <NavLink>Reports</NavLink>
+          <NavLink>Customers</NavLink>
+          <NavLink>PRT</NavLink>
+          <NavLink>Admin</NavLink>
+          <NavLink>About</NavLink>
+        </NavLinks>
+        <Welcome>
+          <span>Welcome, {username}</span>
+          <Button color="#28a745" hoverColor="#218838" onClick={handleLogout}>
+            Logout
+          </Button>
+        </Welcome>
+      </Navbar>
 
-                <RightSideContainer>
-                    {/* Add any content you want in the right-side container */}
-                </RightSideContainer>
-            </ContentContainer>
-        </DashboardContainer>
-    );
+      <ContentContainer>
+        <FormContainer>
+          <DateGroup>
+            <FormGroup>
+              <DateInputWrapper>
+                <label>From</label>
+                <Input type="date" defaultValue="2024-08-01" />
+              </DateInputWrapper>
+            </FormGroup>
+            <FormGroup>
+              <DateInputWrapper>
+                <label>To</label>
+                <Input type="date" defaultValue="2024-08-22" />
+              </DateInputWrapper>
+            </FormGroup>
+          </DateGroup>
+          <FormGroup>
+            <Input type="text" placeholder="Enter customer name" />
+          </FormGroup>
+          <FormGroup>
+            <Input type="text" placeholder="Enter C/O name" />
+          </FormGroup>
+          <FormGroup>
+            <Input type="text" placeholder="Enter driver name" />
+          </FormGroup>
+          <FormGroup>
+            <Input type="text" placeholder="Enter truck details" />
+          </FormGroup>
+          <FormGroup>
+            <Input type="text" placeholder="Enter origin location" />
+          </FormGroup>
+          <FormGroup>
+            <Input type="text" placeholder="Enter destination" />
+          </FormGroup>
+          <ButtonGroup>
+            <Button color="#17a2b8" hoverColor="#138496">
+              <FaSearch /> Search
+            </Button>
+            <Button color="#343a40" hoverColor="#23272b">
+              <FaFileExport /> Export
+            </Button>
+          </ButtonGroup>
+        </FormContainer>
+
+        <RightSideContainer>
+          {/* Add any content you want in the right-side container */}
+        </RightSideContainer>
+      </ContentContainer>
+    </DashboardContainer>
+  );
 };
 
 export default Dashboard;

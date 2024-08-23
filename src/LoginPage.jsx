@@ -79,54 +79,53 @@ const Button = styled.button`
 `;
 
 const LoginPage = () => {
-    const [username, setUsername] = useState('');
-    const [password, setPassword] = useState('');
-    const navigate = useNavigate();  // Updated hook
+  const [username, setUsername] = useState('');
+  const [password, setPassword] = useState('');
+  const navigate = useNavigate();  // Updated hook
 
-    const handleSubmit = (e) => {
-        e.preventDefault();
-        if (username === 'admin' && password === 'admin') {
-            navigate('/dashboard', { state: { username } });  // Updated navigation
-        } else {
-            alert('Invalid credentials');
-        }
-    };
+  const handleSubmit = (e) => {
+    e.preventDefault();
+    if (username === 'admin' && password === 'admin') {
+      navigate('/dashboard', { state: { username } });  // Updated navigation
+    } else {
+      alert('Invalid credentials');
+    }
+  };
 
-    return (
-        <LoginPageContainer>
-            <LoginForm onSubmit={handleSubmit}>
-                <Logo src={logo} alt="Logo" />
-                <InputGroup>
-                    <IconInputContainer>
-                        <Icon>
-                            <FaUser />
-                        </Icon>
-                        <Input
-                            type="text"
-                            value={username}
-                            onChange={(e) => setUsername(e.target.value)}
-                            placeholder="Enter your username"
-                        />
-                    </IconInputContainer>
-                </InputGroup>
-                <InputGroup>
-                    <IconInputContainer>
-                        <Icon>
-                            <FaLock />
-                        </Icon>
-                        <Input
-                            type="password"
-                            value={password}
-                            onChange={(e) => setPassword(e.target.value)}
-                            placeholder="Enter your password"
-                        />
-                    </IconInputContainer>
-                </InputGroup>
+  return (
+    <LoginPageContainer>
+      <LoginForm onSubmit={handleSubmit}>
+        <InputGroup>
+          <IconInputContainer>
+            <Icon>
+              <FaUser />
+            </Icon>
+            <Input
+              type="text"
+              value={username}
+              onChange={(e) => setUsername(e.target.value)}
+              placeholder="Enter your username"
+            />
+          </IconInputContainer>
+        </InputGroup>
+        <InputGroup>
+          <IconInputContainer>
+            <Icon>
+              <FaLock />
+            </Icon>
+            <Input
+              type="password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              placeholder="Enter your password"
+            />
+          </IconInputContainer>
+        </InputGroup>
 
-                <Button type="submit">Login</Button>
-            </LoginForm>
-        </LoginPageContainer>
-    );
+        <Button type="submit">Login</Button>
+      </LoginForm>
+    </LoginPageContainer>
+  );
 };
 
 export default LoginPage;
