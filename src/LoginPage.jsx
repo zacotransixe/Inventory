@@ -54,7 +54,7 @@ const Input = styled.input`
   flex: 1;
   border: none;
   outline: none;
-  font-size: 14px;
+  font-size: 16px;
   padding: 0.5rem;
   background: transparent;
   color: #fff;
@@ -86,7 +86,7 @@ const LoginPage = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (username === 'admin' && password === 'admin') {
-      navigate('/dashboard', { state: { username } });  // Updated navigation
+      navigate('/trips', { state: { username } });  // Updated navigation
     } else {
       alert('Invalid credentials');
     }

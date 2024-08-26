@@ -2,7 +2,7 @@
 import { createGlobalStyle } from 'styled-components';
 
 // Import the font file if using locally
-import AptosDisplay from './Aptos-Display.ttf'; // Make sure the path is correct
+import AptosDisplay from '../Aptos-Display.ttf'; // Make sure the path is correct
 
 const GlobalStyles = createGlobalStyle`
   @font-face {
