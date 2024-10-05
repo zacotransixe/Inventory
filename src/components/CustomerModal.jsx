@@ -1,5 +1,4 @@
-// src/components/CustomerModal.jsx
-import React from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
 import Button from './Button';
 
@@ -68,33 +67,46 @@ const StyledButton = styled(Button)`
   font-size: 14px;
 `;
 
-const CustomerModal = ({ customer, onClose }) => {
-    return (
-        <ModalOverlay>
-            <ModalContent>
-                <ModalHeader>Customer</ModalHeader>
-                <FormGroup>
-                    <Label htmlFor="customer-id">ID</Label>
-                    <Input type="text" id="customer-id" value={customer.id} readOnly />
-                </FormGroup>
-                <FormGroup>
-                    <Label htmlFor="customer-name">Customer</Label>
-                    <Input type="text" id="customer-name" placeholder="Enter customer name" />
-                </FormGroup>
-                <ButtonGroup>
-                    <StyledButton color="#28a745" hoverColor="#218838">
-                        Save
-                    </StyledButton>
-                    <StyledButton color="#ffc107" hoverColor="#e0a800" onClick={onClose}>
-                        Cancel
-                    </StyledButton>
-                    <StyledButton color="#d9534f" hoverColor="#c9302c">
-                        Delete
-                    </StyledButton>
-                </ButtonGroup>
-            </ModalContent>
-        </ModalOverlay>
-    );
+const CustomerModal = ({ customer, onClose, onSave }) => {
+  const [customerName, setCustomerName] = useState(customer.customer);
+
+  const handleSaveClick = () => {
+    if (customerName.trim() === '') {
+      alert('Customer name cannot be empty');
+      return;
+    }
+    onSave(customerName); // Pass the updated customer name back to the parent component
+  };
+
+  return (
+    <ModalOverlay>
+      <ModalContent>
+        <ModalHeader>Customer</ModalHeader>
+        <FormGroup>
+          <Label htmlFor="customer-id">ID</Label>
+          <Input type="text" id="customer-id" value={customer.id} readOnly />
+        </FormGroup>
+        <FormGroup>
+          <Label htmlFor="customer-name">Customer</Label>
+          <Input
+            type="text"
+            id="customer-name"
+            placeholder="Enter customer name"
+            value={customerName}
+            onChange={(e) => setCustomerName(e.target.value)}
+          />
+        </FormGroup>
+        <ButtonGroup>
+          <StyledButton color="#28a745" hoverColor="#218838" onClick={handleSaveClick}>
+            Save
+          </StyledButton>
+          <StyledButton color="#ffc107" hoverColor="#e0a800" onClick={onClose}>
+            Cancel
+          </StyledButton>
+        </ButtonGroup>
+      </ModalContent>
+    </ModalOverlay>
+  );
 };
 
 export default CustomerModal;

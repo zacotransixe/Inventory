@@ -3,6 +3,7 @@ import React from 'react';
 import styled from 'styled-components';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 
+// Sidebar container
 const SidebarContainer = styled.div`
   width: 250px;
   background-color: #000;
@@ -13,6 +14,22 @@ const SidebarContainer = styled.div`
   color: #fff;
 `;
 
+// Styled logo container
+const LogoContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  margin-bottom: 20px; /* Adds space below the logo */
+`;
+
+// Styled logo image
+const LogoImage = styled.img`
+  max-width: 100%; /* Ensures the logo fits within the container */
+  height: auto;
+  border-radius: 8px; /* Optional: adds rounded corners */
+`;
+
+// Navigation list
 const NavList = styled.ul`
   list-style: none;
   padding: 0;
@@ -22,6 +39,7 @@ const NavList = styled.ul`
   gap: 15px;
 `;
 
+// Navigation link styles
 const StyledNavLink = styled(NavLink)`
   background-color: #28a745;
   color: #fff;
@@ -49,6 +67,7 @@ const StyledNavLink = styled(NavLink)`
   }
 `;
 
+// Welcome message and logout section
 const Welcome = styled.div`
   margin-top: auto;
   font-size: 16px;
@@ -57,36 +76,43 @@ const Welcome = styled.div`
   align-items: center;
 `;
 
+// Sidebar component
 const Sidebar = () => {
-    const navigate = useNavigate();
-    const location = useLocation();
-    const username = location.state?.username || 'User';
+  const navigate = useNavigate();
+  const location = useLocation();
+  const username = location.state?.username || 'User';
 
-    const handleLogout = () => {
-        navigate('/');
-    };
+  const handleLogout = () => {
+    navigate('/');
+  };
 
-    return (
-        <SidebarContainer>
-            {/* Navigation List */}
-            <NavList>
-                <li><StyledNavLink to="/trips">Trips</StyledNavLink></li>
-                <li><StyledNavLink to="/expenses">Expenses</StyledNavLink></li>
-                <li><StyledNavLink to="/reports">Reports</StyledNavLink></li>
-                <li><StyledNavLink to="/customers">Customers</StyledNavLink></li>
-                <li><StyledNavLink to="/prt">PRT</StyledNavLink></li>
-                <li><StyledNavLink to="/admin">Admin</StyledNavLink></li>
-                <li><StyledNavLink to="/about">About</StyledNavLink></li>
-            </NavList>
+  return (
+    <SidebarContainer>
+      {/* Logo section */}
+      <LogoContainer>
+        <LogoImage src="/Logo.jpeg" alt="Logo" />
+      </LogoContainer>
 
-            <Welcome>
-                <span>Welcome, {username}</span>
-                <StyledNavLink to="/" onClick={handleLogout} style={{ backgroundColor: '#d9534f', marginTop: '20px' }}>
-                    Logout
-                </StyledNavLink>
-            </Welcome>
-        </SidebarContainer>
-    );
+      {/* Navigation List */}
+      <NavList>
+        <li><StyledNavLink to="/trips">Trips</StyledNavLink></li>
+        <li><StyledNavLink to="/expenses">Expenses</StyledNavLink></li>
+        <li><StyledNavLink to="/reports">Reports</StyledNavLink></li>
+        <li><StyledNavLink to="/customers">Customers</StyledNavLink></li>
+        <li><StyledNavLink to="/prt">PRT</StyledNavLink></li>
+        <li><StyledNavLink to="/admin">Admin</StyledNavLink></li>
+        <li><StyledNavLink to="/about">About</StyledNavLink></li>
+      </NavList>
+
+      {/* Welcome message and logout button */}
+      <Welcome>
+        <span>Welcome, {username}</span>
+        <StyledNavLink to="/" onClick={handleLogout} style={{ backgroundColor: '#d9534f', marginTop: '20px' }}>
+          Logout
+        </StyledNavLink>
+      </Welcome>
+    </SidebarContainer>
+  );
 };
 
 export default Sidebar;
