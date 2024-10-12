@@ -9,12 +9,13 @@ import Login from './LoginPage';
 import PRT from './pages/PRT'; // Import PRT page
 import Admin from './pages/Admin'; // Import Admin page
 import About from './pages/About'; // Import About page
+import Home from './pages/Home';
 
 const App = () => {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Login />} />
+        <Route path="/" element={<Home />} />
         <Route path="/trips" element={<Dashboard />} />
         <Route path="/expenses" element={<Expenses />} /> {/* Define route for Expenses */}
         <Route path="/reports" element={<Reports />} />

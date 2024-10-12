@@ -4,11 +4,13 @@ import { FaSearch, FaFileExport, FaPlus } from 'react-icons/fa';
 import Sidebar from '../components/Sidebar';
 import Button from '../components/Button';
 import Modal from 'react-modal';
-import { db } from '../firebase';
+import { db, auth } from '../firebase'; // Add auth from firebase
+import { onAuthStateChanged } from 'firebase/auth';
 import { collection, query, where, getDocs, addDoc } from 'firebase/firestore';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Papa from 'papaparse';
+import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
 
 
 const DashboardContainer = styled.div`
@@ -21,7 +23,7 @@ const ContentContainer = styled.div`
   flex-grow: 1;
   padding: 2rem;
   display: flex;
-  flex-direction: column;
+  flex-direction: column; 
   gap: 20px;
   max-width: 1200px;
   margin: auto;
@@ -29,7 +31,7 @@ const ContentContainer = styled.div`
 
 const SearchBar = styled.div`
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: 1fr 1fr auto auto;
   gap: 15px;
   align-items: center;
   background-color: #fff;
@@ -37,6 +39,7 @@ const SearchBar = styled.div`
   border-radius: 10px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   max-width: 100%;
+  margin-bottom: 20px; /* Add margin at the bottom */
 `;
 
 const Input = styled.input`
@@ -53,19 +56,35 @@ const Input = styled.input`
   }
 `;
 
+const InputWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+`;
+
+const InputLabel = styled.label`
+  font-weight: bold;
+  margin-bottom: 5px;
+`;
+
+
 // Add this with other styled components at the top of the file
 const Select = styled.select`
-  padding: 0.5rem;
-  font-size: 14px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  outline: none;
-  width: 100%;
-  text-align: left;
+padding: 0.5rem;
+font - size: 14px;
+border: 1px solid #ccc;
+border - radius: 5px;
+outline: none;
+width: 100 %;
+text - align: left;
 
   &:focus {
-    border-color: #007bff;
-  }
+  border - color: #007bff;
+}
+`;
+
+const ModalForm = styled.form`
+  display: flex;
+  flex-direction: column;
 `;
 
 
@@ -73,7 +92,7 @@ const ButtonGroup = styled.div`
   display: flex;
   gap: 10px;
   justify-content: flex-end;
-  grid-column: span 4;
+  grid-column: span 4 ; /* Adjust to match the new layout */
 `;
 
 const RightSideContainer = styled.div`
@@ -84,27 +103,49 @@ const RightSideContainer = styled.div`
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
 `;
 
-const Table = styled.table`
-  width: 100%;
+const TableWrapper = styled.div`
+  max-width: 100%;
+  overflow-x: auto; /* Ensure the table is scrollable horizontally */
+  margin-top: 20px;
+`;
+
+const StyledTable = styled(Table)`
   border-collapse: collapse;
-  table-layout: fixed; /* Fix table layout */
-  min-width: 1500px; /* Set a minimum width for the table */
+  width: 100%;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  background-color: white;
+`;
 
-  th, td {
-    border: 1px solid #ddd;
-    padding: 8px;
-    text-align: left;
-    white-space: nowrap; /* Prevent text from wrapping */
-    overflow: hidden; /* Hide overflow content */
-    text-overflow: ellipsis; /* Add ellipsis for long text */
-        width: 100px; /* Set fixed width of 50px for each column */
-  }
-
+const StyledTableHead = styled(TableHead)`
+  background-color: #343a40;
+  color: #fff;
   th {
-    background-color: #f4f4f4;
+    padding: 12px;
+    text-align: left;
+    color: #fff;
+    font-weight: bold;
     position: sticky;
     top: 0;
-    z-index: 1;
+    z-index: 2;
+  }
+`;
+
+const StyledTableBody = styled(TableBody)`
+  tr {
+    &:nth-of-type(even) {
+      background-color: #f9f9f9;
+    }
+    &:hover {
+      background-color: #f1f1f1;
+    }
+  }
+  td {
+    padding: 12px;
+    border-bottom: 1px solid #ddd;
+    text-align: left;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
   }
 `;
 
@@ -121,56 +162,30 @@ const PaginationButton = styled.button`
   border: none;
   border-radius: 5px;
   cursor: pointer;
+
   &:disabled {
     background-color: #ddd;
     cursor: not-allowed;
   }
 `;
 
-const TableWrapper = styled.div`
-  max-width: 100%;
-  overflow-x: auto; /* Ensure the table is scrollable horizontally */
-  margin-top: 20px;
-`;
-
 // Define missing components
-const ModalForm = styled.form`
-  display: flex;
-  flex-direction: column;
-`;
-
-const FormGroup = styled.div`
-  display: flex;
-  gap: 20px;
-  margin-bottom: 15px;
-`;
-
-const InputField = styled.div`
-  flex: 1;
-`;
-
-const FormLabel = styled.label`
-  display: block;
-  margin-bottom: 5px;
-`;
-
-const SubmitButtonGroup = styled.div`
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-`;
-
 const Loader = styled.div`
   border: 4px solid #f3f3f3;
   border-top: 4px solid #3498db;
   border-radius: 50%;
-  width: 20px;
-  height: 20px;
-  animation: spin 2s linear infinite;
+  width: 40px;
+  height: 40px;
+  margin: auto;
+  animation: spin 1s linear infinite;
 
   @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
   }
 `;
 
@@ -194,97 +209,45 @@ const CancelButton = styled.button`
 
 const Dashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [customers, setCustomers] = useState([]);
+
   const [loading, setLoading] = useState(false);
-  const [customers, setCustomers] = useState([]); // State to store customers from Firestore
   const [searchResults, setSearchResults] = useState([]);
   const [searchData, setSearchData] = useState({
-    tripDate: '',
-    customer: '',
-    cO: '',
-    driver: '',
-    truck: '',
-    originLocation: '',
-    destination: '',
+    fromDate: '',
+    toDate: '',
   });
+  const [loggedIn, setLoggedIn] = useState(false); // State for login status
 
-
-  const [formData, setFormData] = useState({
-    tripDate: '',
-    truck: '',
-    truckCategory: '',
-    deliveryNote: '',
-    driver: '',
-    cO: '',
-    customer: '',
-    loadedFrom: '',
-    uploadedTo: '',
-    crRate: '',
-    crWait: '',
-    crReceivedAmount: '',
-    drRate: '',
-    drWait: '',
-    drPaid: '',
-    invoice: '',
-    invoiceDate: '',
-    deductions: '',
-    remarks: '',
-  });
-
-  // Fetch customers from Firestore when the modal opens
-  useEffect(() => {
-    if (isModalOpen) {
-      const fetchCustomers = async () => {
-        try {
-          const customersCollection = collection(db, 'customers');
-          const customersSnapshot = await getDocs(customersCollection);
-          const customersList = customersSnapshot.docs.map((doc) => ({
-            id: doc.id,
-            ...doc.data(),
-          }));
-          setCustomers(customersList);
-        } catch (error) {
-          console.error('Error fetching customers: ', error);
-        }
-      };
-
-      fetchCustomers();
-    }
-  }, [isModalOpen]);
-
+  // Pagination state
   const [currentPage, setCurrentPage] = useState(1);
-  const recordsPerPage = 10;
+  const recordsPerPage = 5;
 
-  // Calculate the range of records to show based on current page
-  const indexOfLastRecord = currentPage * recordsPerPage;
-  const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
-  const currentRecords = searchResults.slice(indexOfFirstRecord, indexOfLastRecord);
+  // Check for authentication status
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (user) {
+        setLoggedIn(true);
+      } else {
+        setLoggedIn(false);
+      }
+    });
 
-  const totalPages = Math.ceil(searchResults.length / recordsPerPage);
-
-  // Pagination controls
-  const handlePreviousPage = () => {
-    if (currentPage > 1) setCurrentPage(currentPage - 1);
-  };
-
-  const handleNextPage = () => {
-    if (currentPage < totalPages) setCurrentPage(currentPage + 1);
-  };
+    return () => unsubscribe(); // Cleanup on unmount
+  }, []);
 
   const openModal = () => setIsModalOpen(true);
   const closeModal = () => setIsModalOpen(false);
 
-  const handleSearchInputChange = (e) => {
+  // Input change handler
+  const handleInputChange = (e) => {
     const { name, value } = e.target;
-    setSearchData((prevData) => ({
+    setFormData((prevData) => ({
       ...prevData,
       [name]: value,
     }));
   };
 
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prevData) => ({ ...prevData, [name]: value }));
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -307,16 +270,20 @@ const Dashboard = () => {
     }
   };
 
+  const handleSearchInputChange = (e) => {
+    const { name, value } = e.target;
+    setSearchData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
+  };
 
   const handleSearchSubmit = async () => {
     setLoading(true);
     const searchQuery = query(
       collection(db, 'trips'),
-      ...(searchData.tripDate ? [where('tripDate', '==', searchData.tripDate)] : []),
-      ...(searchData.customer ? [where('customer', '==', searchData.customer)] : []),
-      ...(searchData.cO ? [where('cO', '==', searchData.cO)] : []),
-      ...(searchData.driver ? [where('driver', '==', searchData.driver)] : []),
-      ...(searchData.truck ? [where('truck', '==', searchData.truck)] : [])
+      ...(searchData.fromDate ? [where('tripDate', '>=', searchData.fromDate)] : []),
+      ...(searchData.toDate ? [where('tripDate', '<=', searchData.toDate)] : [])
     );
 
     try {
@@ -350,155 +317,217 @@ const Dashboard = () => {
     document.body.removeChild(link);
   };
 
+  const [formData, setFormData] = useState({
+    tripDate: '',
+    truck: '',
+    truckCategory: '',
+    deliveryNote: '',
+    driver: '',
+    cO: '',
+    customer: '',
+    loadedFrom: '',
+    uploadedTo: '',
+    crRate: '',
+    crWait: '',
+    crReceivedAmount: '',
+    drRate: '',
+    drWait: '',
+    drPaid: '',
+    invoice: '',
+    invoiceDate: '',
+    deductions: '',
+    remarks: '',
+  });
+
+  // Define missing styled components
+  const FormGroup = styled.div`
+display: flex;
+flex-direction: column;
+margin-bottom: 15px;
+`;
+
+  const InputField = styled.div`
+margin-bottom: 10px;
+`;
+
+  const FormLabel = styled.label`
+font-weight: bold;
+margin-bottom: 5px;
+`;
+
+  const SubmitButtonGroup = styled.div`
+display: flex;
+justify-content: flex-end;
+gap: 10px;
+`;
+
+  // Fetch customers from Firestore when the modal opens
+  useEffect(() => {
+    if (isModalOpen) {
+      const fetchCustomers = async () => {
+        try {
+          const customersCollection = collection(db, 'customers');
+          const customersSnapshot = await getDocs(customersCollection);
+          const customersList = customersSnapshot.docs.map((doc) => ({
+            id: doc.id,
+            ...doc.data(),
+          }));
+          setCustomers(customersList);
+        } catch (error) {
+          console.error('Error fetching customers: ', error);
+        }
+      };
+
+      fetchCustomers();
+    }
+  }, [isModalOpen]);
+
+  // Pagination logic
+  const indexOfLastRecord = currentPage * recordsPerPage;
+  const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
+  const currentRecords = searchResults.slice(indexOfFirstRecord, indexOfLastRecord);
+  const totalPages = Math.ceil(searchResults.length / recordsPerPage);
+
+  const handleNextPage = () => {
+    setCurrentPage((prevPage) => Math.min(prevPage + 1, totalPages));
+  };
+
+  const handlePreviousPage = () => {
+    setCurrentPage((prevPage) => Math.max(prevPage - 1, 1));
+  };
+
   return (
     <DashboardContainer>
       <Sidebar />
 
       <ContentContainer>
         <SearchBar>
-          <Input
-            type="date"
-            name="tripDate"
-            placeholder="Trip Date"
-            value={searchData.tripDate}
-            onChange={handleSearchInputChange}
-          />
-          <Input
-            type="text"
-            name="customer"
-            placeholder="Customer name"
-            value={searchData.customer}
-            onChange={handleSearchInputChange}
-          />
-          <Input
-            type="text"
-            name="cO"
-            placeholder="C/O name"
-            value={searchData.cO}
-            onChange={handleSearchInputChange}
-          />
-          <Input
-            type="text"
-            name="driver"
-            placeholder="Driver name"
-            value={searchData.driver}
-            onChange={handleSearchInputChange}
-          />
-          <Input
-            type="text"
-            name="truck"
-            placeholder="Truck details"
-            value={searchData.truck}
-            onChange={handleSearchInputChange}
-          />
-          <Input
-            type="text"
-            name="originLocation"
-            placeholder="Origin location"
-            value={searchData.originLocation}
-            onChange={handleSearchInputChange}
-          />
-          <Input
-            type="text"
-            name="destination"
-            placeholder="Destination"
-            value={searchData.destination}
-            onChange={handleSearchInputChange}
-          />
+          <InputWrapper>
+            <InputLabel>Start Date</InputLabel>
+
+            <Input
+              type="date"
+              name="fromDate"
+              placeholder="From Date"
+              value={searchData.fromDate}
+              onChange={handleSearchInputChange}
+            />
+          </InputWrapper>
+          <InputWrapper>
+            <InputLabel>End Date</InputLabel>
+            <Input
+              type="date"
+              name="toDate"
+              placeholder="To Date"
+              value={searchData.toDate}
+              onChange={handleSearchInputChange}
+            />
+          </InputWrapper>
           <ButtonGroup>
             <Button color="#17a2b8" hoverColor="#138496" onClick={handleSearchSubmit}>
               <FaSearch /> Search
             </Button>
-            <Button color="#343a40" hoverColor="#23272b" onClick={handleExport}>
+            {loggedIn && (<Button color="#343a40" hoverColor="#23272b" onClick={handleExport}>
               <FaFileExport /> Export
-            </Button>
-            <Button color="#28a745" hoverColor="#218838" onClick={openModal}>
-              <FaPlus /> Add New
-            </Button>
+            </Button>)}
+            {loggedIn && (
+              <Button color="#28a745" hoverColor="#218838" onClick={openModal}>
+                <FaPlus /> Add New
+              </Button>
+            )}
           </ButtonGroup>
         </SearchBar>
+
         <RightSideContainer>
-          <TableWrapper>
-            {searchResults.length > 0 && (
-              <Table>
-                <thead>
-                  <tr>
-                    <th>ID</th>
-                    <th>Trip Date</th>
-                    <th>Truck</th>
-                    <th>Truck Category</th>
-                    <th>Delivery Note</th>
-                    <th>Driver</th>
-                    <th>C/O</th>
-                    <th>Customer</th>
-                    <th>Loaded From</th>
-                    <th>Second Loading</th>
-                    <th>Uploaded To</th>
-                    <th>Second Offloading</th>
-                    <th>CR Rate</th>
-                    <th>CR Wait</th>
-                    <th>CR Rcvd Amount</th>
-                    <th>CR Balance</th>
-                    <th>Invoice</th>
-                    <th>Invoice Date</th>
-                    <th>DR Rate</th>
-                    <th>DR Wait</th>
-                    <th>DR Paid</th>
-                    <th>DR Balance</th>
-                    <th>Deductions (Advance)</th>
-                    <th>Contact</th>
-                    <th>Remarks</th>
-                    <th>Created</th>
-                    <th>User</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {searchResults.map((result) => (
-                    <tr key={result.id}>
-                      <td>{result.id}</td>
-                      <td>{result.tripDate}</td>
-                      <td>{result.truck}</td>
-                      <td>{result.truckCategory}</td>
-                      <td>{result.deliveryNote}</td>
-                      <td>{result.driver}</td>
-                      <td>{result.cO}</td>
-                      <td>{result.customer}</td>
-                      <td>{result.loadedFrom}</td>
-                      <td>{result.secondLoading}</td>
-                      <td>{result.uploadedTo}</td>
-                      <td>{result.secondOffloading}</td>
-                      <td>{result.crRate}</td>
-                      <td>{result.crWait}</td>
-                      <td>{result.crReceivedAmount}</td>
-                      <td>{result.crBalance}</td>
-                      <td>{result.invoice}</td>
-                      <td>{result.invoiceDate}</td>
-                      <td>{result.drRate}</td>
-                      <td>{result.drWait}</td>
-                      <td>{result.drPaid}</td>
-                      <td>{result.drBalance}</td>
-                      <td>{result.deductions}</td>
-                      <td>{result.contact}</td>
-                      <td>{result.remarks}</td>
-                      <td>{result.created}</td>
-                      <td>{result.user}</td>
-                    </tr>
-                  ))}
-                </tbody>
-              </Table>
-            )}
-          </TableWrapper>
+          {loading ? (
+            <Loader />
+          ) : (
+            <TableWrapper>
+              {searchResults.length > 0 && (
+                <StyledTable>
+                  <StyledTableHead>
+                    <TableRow>
+                      <TableCell>Trip Date</TableCell>
+                      <TableCell>Truck</TableCell>
+                      <TableCell>Truck Category</TableCell>
+                      <TableCell>Delivery Note</TableCell>
+                      <TableCell>Driver</TableCell>
+                      <TableCell>C/O</TableCell>
+                      <TableCell>Customer</TableCell>
+                      <TableCell>Loaded From</TableCell>
+                      <TableCell>Second Loading</TableCell>
+                      <TableCell>Uploaded To</TableCell>
+                      <TableCell>Second Offloading</TableCell>
+                      <TableCell>CR Rate</TableCell>
+                      <TableCell>CR Wait</TableCell>
+                      <TableCell>CR Rcvd Amount</TableCell>
+                      <TableCell>CR Balance</TableCell>
+                      <TableCell>Invoice</TableCell>
+                      <TableCell>Invoice Date</TableCell>
+                      <TableCell>DR Rate</TableCell>
+                      <TableCell>DR Wait</TableCell>
+                      <TableCell>DR Paid</TableCell>
+                      <TableCell>DR Balance</TableCell>
+                      <TableCell>Deductions (Advance)</TableCell>
+                      <TableCell>Contact</TableCell>
+                      <TableCell>Remarks</TableCell>
+                      <TableCell>Created</TableCell>
+                      <TableCell>User</TableCell>
+                    </TableRow>
+                  </StyledTableHead>
+                  <StyledTableBody>
+                    {searchResults.map((result) => (
+                      <TableRow key={result.id}>
+                        <TableCell>{result.tripDate}</TableCell>
+                        <TableCell>{result.truck}</TableCell>
+                        <TableCell>{result.truckCategory}</TableCell>
+                        <TableCell>{result.deliveryNote}</TableCell>
+                        <TableCell>{result.driver}</TableCell>
+                        <TableCell>{result.cO}</TableCell>
+                        <TableCell>{result.customer}</TableCell>
+                        <TableCell>{result.loadedFrom}</TableCell>
+                        <TableCell>{result.secondLoading}</TableCell>
+                        <TableCell>{result.uploadedTo}</TableCell>
+                        <TableCell>{result.secondOffloading}</TableCell>
+                        <TableCell>{result.crRate}</TableCell>
+                        <TableCell>{result.crWait}</TableCell>
+                        <TableCell>{result.crReceivedAmount}</TableCell>
+                        <TableCell>{result.crBalance}</TableCell>
+                        <TableCell>{result.invoice}</TableCell>
+                        <TableCell>{result.invoiceDate}</TableCell>
+                        <TableCell>{result.drRate}</TableCell>
+                        <TableCell>{result.drWait}</TableCell>
+                        <TableCell>{result.drPaid}</TableCell>
+                        <TableCell>{result.drBalance}</TableCell>
+                        <TableCell>{result.deductions}</TableCell>
+                        <TableCell>{result.contact}</TableCell>
+                        <TableCell>{result.remarks}</TableCell>
+                        <TableCell>{result.created}</TableCell>
+                        <TableCell>{result.user}</TableCell>
+                      </TableRow>
+                    ))}
+                  </StyledTableBody>
+                </StyledTable>
+              )}
+            </TableWrapper>
+          )}
+
           {/* Pagination Controls */}
           <PaginationControls>
             <PaginationButton onClick={handlePreviousPage} disabled={currentPage === 1}>
               Previous
             </PaginationButton>
-            <span>Page {currentPage} of {totalPages}</span>
+            <span>
+              Page {currentPage} of {totalPages}
+            </span>
             <PaginationButton onClick={handleNextPage} disabled={currentPage === totalPages}>
               Next
             </PaginationButton>
           </PaginationControls>
+
+
         </RightSideContainer>
+
 
         <Modal
           isOpen={isModalOpen}
@@ -796,10 +825,8 @@ const Dashboard = () => {
           </ModalForm>
         </Modal>
 
-
-
+        <ToastContainer />
       </ContentContainer>
-      <ToastContainer /> {/* Toast notification container */}
     </DashboardContainer>
   );
 };

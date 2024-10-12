@@ -1,5 +1,4 @@
-// src/components/Sidebar.jsx
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
 import { NavLink, useNavigate, useLocation } from 'react-router-dom';
 
@@ -80,10 +79,25 @@ const Welcome = styled.div`
 const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
+  const [isLoggedIn, setIsLoggedIn] = useState(false);
   const username = location.state?.username || 'User';
 
+  useEffect(() => {
+    // Check if the user is logged in (you can replace this with your authentication check)
+    const isUserLoggedIn = localStorage.getItem('isLoggedIn') === 'true'; // Example: Check from localStorage
+    setIsLoggedIn(isUserLoggedIn);
+  }, []);
+
   const handleLogout = () => {
-    navigate('/');
+    // Handle logout logic
+    localStorage.setItem('isLoggedIn', 'false'); // Clear login status
+    setIsLoggedIn(false);
+    navigate('/login');
+  };
+
+  const handleLogin = () => {
+    // Redirect to login page
+    navigate('/login');
   };
 
   return (
@@ -95,21 +109,60 @@ const Sidebar = () => {
 
       {/* Navigation List */}
       <NavList>
-        <li><StyledNavLink to="/trips">Trips</StyledNavLink></li>
-        <li><StyledNavLink to="/expenses">Expenses</StyledNavLink></li>
-        <li><StyledNavLink to="/reports">Reports</StyledNavLink></li>
-        <li><StyledNavLink to="/customers">Customers</StyledNavLink></li>
-        <li><StyledNavLink to="/prt">PRT</StyledNavLink></li>
-        <li><StyledNavLink to="/admin">Admin</StyledNavLink></li>
-        <li><StyledNavLink to="/about">About</StyledNavLink></li>
+        <li>
+          <StyledNavLink to="/">Home</StyledNavLink>
+        </li>
+        <li>
+          <StyledNavLink to="/trips">Trips</StyledNavLink>
+        </li>
+
+        {/* Show other buttons only if logged in */}
+        {isLoggedIn && (
+          <>
+            <li>
+              <StyledNavLink to="/expenses">Expenses</StyledNavLink>
+            </li>
+            <li>
+              <StyledNavLink to="/reports">Reports</StyledNavLink>
+            </li>
+            <li>
+              <StyledNavLink to="/customers">Customers</StyledNavLink>
+            </li>
+            <li>
+              <StyledNavLink to="/prt">PRT</StyledNavLink>
+            </li>
+            <li>
+              <StyledNavLink to="/admin">Admin</StyledNavLink>
+            </li>
+            <li>
+              <StyledNavLink to="/about">About</StyledNavLink>
+            </li>
+          </>
+        )}
       </NavList>
 
-      {/* Welcome message and logout button */}
+      {/* Welcome message and login/logout button */}
       <Welcome>
-        <span>Welcome, {username}</span>
-        <StyledNavLink to="/" onClick={handleLogout} style={{ backgroundColor: '#d9534f', marginTop: '20px' }}>
-          Logout
-        </StyledNavLink>
+        {isLoggedIn ? (
+          <>
+            <span>Welcome, {username}</span>
+            <StyledNavLink
+              to="/"
+              onClick={handleLogout}
+              style={{ backgroundColor: '#d9534f', marginTop: '20px' }}
+            >
+              Logout
+            </StyledNavLink>
+          </>
+        ) : (
+          <StyledNavLink
+            to="/login"
+            onClick={handleLogin}
+            style={{ backgroundColor: '#28a745', marginTop: '20px' }}
+          >
+            Login
+          </StyledNavLink>
+        )}
       </Welcome>
     </SidebarContainer>
   );
