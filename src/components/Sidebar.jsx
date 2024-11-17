@@ -18,14 +18,14 @@ const LogoContainer = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  margin-bottom: 20px; /* Adds space below the logo */
+  margin-bottom: 20px;
 `;
 
 // Styled logo image
 const LogoImage = styled.img`
-  max-width: 100%; /* Ensures the logo fits within the container */
+  max-width: 100%;
   height: auto;
-  border-radius: 8px; /* Optional: adds rounded corners */
+  border-radius: 8px;
 `;
 
 // Navigation list
@@ -49,7 +49,7 @@ const StyledNavLink = styled(NavLink)`
   cursor: pointer;
   transition: background-color 0.3s ease, box-shadow 0.3s ease;
   text-align: center;
-  display: block; /* Makes the NavLink fill its parent container */
+  display: block;
 
   &:hover {
     background-color: #218838;
@@ -62,7 +62,7 @@ const StyledNavLink = styled(NavLink)`
   }
 
   &.active {
-    background-color: #218838; /* Active link color */
+    background-color: #218838;
   }
 `;
 
@@ -83,20 +83,18 @@ const Sidebar = () => {
   const username = location.state?.username || 'User';
 
   useEffect(() => {
-    // Check if the user is logged in (you can replace this with your authentication check)
-    const isUserLoggedIn = localStorage.getItem('isLoggedIn') === 'true'; // Example: Check from localStorage
+    // Check if the user is logged in (use authentication logic here, if applicable)
+    const isUserLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
     setIsLoggedIn(isUserLoggedIn);
   }, []);
 
   const handleLogout = () => {
-    // Handle logout logic
-    localStorage.setItem('isLoggedIn', 'false'); // Clear login status
+    localStorage.setItem('isLoggedIn', 'false');
     setIsLoggedIn(false);
     navigate('/login');
   };
 
   const handleLogin = () => {
-    // Redirect to login page
     navigate('/login');
   };
 

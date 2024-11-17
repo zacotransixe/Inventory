@@ -84,40 +84,40 @@ const StyledButton = styled(Button)`
 `;
 
 const Modal = ({ onClose }) => {
-    return (
-        <ModalOverlay>
-            <ModalContent>
-                <ModalHeader>Expenses</ModalHeader>
-                <FormGroup>
-                    <Label htmlFor="expense-id">ID</Label>
-                    <Input type="text" id="expense-id" defaultValue="0" readOnly />
-                </FormGroup>
-                <FormGroup>
-                    <Label htmlFor="expense-date">Date</Label>
-                    <Input type="date" id="expense-date" defaultValue="2024-08-26" />
-                </FormGroup>
-                <FormGroup>
-                    <Label htmlFor="expense-amount">Amount</Label>
-                    <Input type="number" id="expense-amount" placeholder="Enter amount" />
-                </FormGroup>
-                <FormGroup>
-                    <Label htmlFor="expense-description">Description</Label>
-                    <Input type="text" id="expense-description" placeholder="Enter description" />
-                </FormGroup>
-                <ButtonGroup>
-                    <StyledButton color="#28a745" hoverColor="#218838">
-                        Save
-                    </StyledButton>
-                    <StyledButton color="#ffc107" hoverColor="#e0a800" onClick={onClose}>
-                        Cancel
-                    </StyledButton>
-                    <StyledButton color="#d9534f" hoverColor="#c9302c">
-                        Delete
-                    </StyledButton>
-                </ButtonGroup>
-            </ModalContent>
-        </ModalOverlay>
-    );
+  return (
+    <ModalOverlay>
+      <ModalContent>
+        <ModalHeader>Expenses</ModalHeader>
+        <FormGroup>
+          <Label htmlFor="expense-id">ID</Label>
+          <Input type="text" id="expense-id" defaultValue="0" readOnly />
+        </FormGroup>
+        <FormGroup>
+          <Label htmlFor="expense-date">Date</Label>
+          <Input type="date" id="expense-date" defaultValue="2024-08-26" />
+        </FormGroup>
+        <FormGroup>
+          <Label htmlFor="expense-amount">Amount</Label>
+          <Input type="number" id="expense-amount" placeholder="Enter amount" />
+        </FormGroup>
+        <FormGroup>
+          <Label htmlFor="expense-description">Description</Label>
+          <Input type="text" id="expense-description" placeholder="Enter description" />
+        </FormGroup>
+        <ButtonGroup>
+          <StyledButton color="#28a745" hoverColor="#218838">
+            Save
+          </StyledButton>
+          <StyledButton color="#ffc107" hoverColor="#e0a800" onClick={onClose}>
+            Cancel
+          </StyledButton>
+          <StyledButton color="#d9534f" hoverColor="#c9302c">
+            Delete
+          </StyledButton>
+        </ButtonGroup>
+      </ModalContent>
+    </ModalOverlay>
+  );
 };
 
 export default Modal;

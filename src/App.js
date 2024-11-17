@@ -5,7 +5,7 @@ import Dashboard from './pages/Dashboard';
 import Expenses from './pages/Expenses'; // Import the new Expenses page
 import Reports from './pages/Reports';
 import Customers from './pages/Customers';
-import Login from './LoginPage';
+import Login from './pages/Login';
 import PRT from './pages/PRT'; // Import PRT page
 import Admin from './pages/Admin'; // Import Admin page
 import About from './pages/About'; // Import About page
@@ -16,6 +16,7 @@ const App = () => {
     <Router>
       <Routes>
         <Route path="/" element={<Home />} />
+        <Route path="/login" element={<Login />} />
         <Route path="/trips" element={<Dashboard />} />
         <Route path="/expenses" element={<Expenses />} /> {/* Define route for Expenses */}
         <Route path="/reports" element={<Reports />} />
