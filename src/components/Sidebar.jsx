@@ -114,29 +114,25 @@ const Sidebar = () => {
           <StyledNavLink to="/trips">Trips</StyledNavLink>
         </li>
 
-        {/* Show other buttons only if logged in */}
-        {isLoggedIn && (
-          <>
-            <li>
-              <StyledNavLink to="/expenses">Expenses</StyledNavLink>
-            </li>
-            <li>
-              <StyledNavLink to="/reports">Reports</StyledNavLink>
-            </li>
-            <li>
-              <StyledNavLink to="/customers">Customers</StyledNavLink>
-            </li>
-            <li>
-              <StyledNavLink to="/prt">PRT</StyledNavLink>
-            </li>
-            <li>
-              <StyledNavLink to="/admin">Admin</StyledNavLink>
-            </li>
-            <li>
-              <StyledNavLink to="/about">About</StyledNavLink>
-            </li>
-          </>
-        )}
+        <li>
+          <StyledNavLink to="/expenses">Expenses</StyledNavLink>
+        </li>
+        <li>
+          <StyledNavLink to="/reports">Reports</StyledNavLink>
+        </li>
+        <li>
+          <StyledNavLink to="/customers">Customers</StyledNavLink>
+        </li>
+        <li>
+          <StyledNavLink to="/prt">PRT</StyledNavLink>
+        </li>
+        <li>
+          <StyledNavLink to="/admin">Admin</StyledNavLink>
+        </li>
+        <li>
+          <StyledNavLink to="/about">About</StyledNavLink>
+        </li>
+
       </NavList>
 
       {/* Welcome message and login/logout button */}

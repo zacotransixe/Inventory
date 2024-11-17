@@ -11,6 +11,7 @@ import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Papa from 'papaparse';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
+import { Timestamp } from 'firebase/firestore';
 
 // Styled Components
 const DashboardContainer = styled.div`
@@ -352,13 +353,19 @@ const Dashboard = () => {
         ...(searchData.fromDate ? [where('tripDate', '>=', searchData.fromDate)] : []),
         ...(searchData.toDate ? [where('tripDate', '<=', searchData.toDate)] : [])
       );
+
       const querySnapshot = await getDocs(searchQuery);
       setSearchResults(querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
+
+      if (querySnapshot.empty) {
+        toast.info("No records found for the specified date range.");
+      }
     } catch (error) {
       toast.error('Error fetching data: ' + error.message);
     }
     setLoading(false);
   };
+
 
   const handleExport = () => {
     if (searchResults.length === 0) {
@@ -410,28 +417,26 @@ const Dashboard = () => {
                   <StyledTableHead>
                     <TableRow>
                       <TableCell>Trip Date</TableCell>
-                      <TableCell>Truck</TableCell>
-                      <TableCell>Category</TableCell>
+                      <TableCell>Truck Plate Number</TableCell>
+                      <TableCell>Truck Driver Name</TableCell>
+                      <TableCell>Truck Category</TableCell>
                       <TableCell>Delivery Note</TableCell>
-                      <TableCell>Driver</TableCell>
+                      <TableCell>Customer Name</TableCell>
                       <TableCell>C/O</TableCell>
-                      <TableCell>Customer</TableCell>
-                      <TableCell>Loaded From</TableCell>
+                      <TableCell>First Loading</TableCell>
+                      <TableCell>First Offloading</TableCell>
                       <TableCell>Second Loading</TableCell>
-                      <TableCell>Uploaded To</TableCell>
                       <TableCell>Second Offloading</TableCell>
-                      <TableCell>CR Rate</TableCell>
-                      <TableCell>CR Wait</TableCell>
-                      <TableCell>CR Rcvd Amount</TableCell>
-                      <TableCell>CR Balance</TableCell>
-                      <TableCell>Invoice</TableCell>
+                      <TableCell>Customer Rate</TableCell>
+                      <TableCell>Customer Waiting Charges</TableCell>
+                      <TableCell>Amount Received</TableCell>
+                      <TableCell>Amount Balance</TableCell>
+                      <TableCell>Driver Rate</TableCell>
+                      <TableCell>Driver Waiting Charges</TableCell>
+                      <TableCell>Amount Paid</TableCell>
+                      <TableCell>Amount Balance</TableCell>
+                      <TableCell>Invoice No</TableCell>
                       <TableCell>Invoice Date</TableCell>
-                      <TableCell>DR Rate</TableCell>
-                      <TableCell>DR Wait</TableCell>
-                      <TableCell>DR Paid</TableCell>
-                      <TableCell>DR Balance</TableCell>
-                      <TableCell>Deductions (Advance)</TableCell>
-                      <TableCell>Contact</TableCell>
                       <TableCell>Remarks</TableCell>
                       <TableCell>Created</TableCell>
                       <TableCell>User</TableCell>
@@ -441,31 +446,28 @@ const Dashboard = () => {
                     {searchResults.map((result) => (
                       <TableRow key={result.id}>
                         <TableCell>{result.tripDate}</TableCell>
-                        <TableCell>{result.truck}</TableCell>
+                        <TableCell>{result.truckPlateNumber}</TableCell>
+                        <TableCell>{result.truckDriverName}</TableCell>
                         <TableCell>{result.truckCategory}</TableCell>
                         <TableCell>{result.deliveryNote}</TableCell>
-                        <TableCell>{result.driver}</TableCell>
+                        <TableCell>{result.customerName}</TableCell>
                         <TableCell>{result.cO}</TableCell>
-                        <TableCell>{result.customer}</TableCell>
-                        <TableCell>{result.loadedFrom}</TableCell>
+                        <TableCell>{result.firstLoading}</TableCell>
+                        <TableCell>{result.firstOffloading}</TableCell>
                         <TableCell>{result.secondLoading}</TableCell>
-                        <TableCell>{result.uploadedTo}</TableCell>
                         <TableCell>{result.secondOffloading}</TableCell>
-                        <TableCell>{result.crRate}</TableCell>
-                        <TableCell>{result.crWait}</TableCell>
-                        <TableCell>{result.crReceivedAmount}</TableCell>
-                        <TableCell>{result.crBalance}</TableCell>
-                        <TableCell>{result.invoice}</TableCell>
+                        <TableCell>{result.customerRate}</TableCell>
+                        <TableCell>{result.customerWaitingCharges}</TableCell>
+                        <TableCell>{result.amountReceived}</TableCell>
+                        <TableCell>{result.amountBalance}</TableCell>
+                        <TableCell>{result.driverRate}</TableCell>
+                        <TableCell>{result.driverWaitingCharges}</TableCell>
+                        <TableCell>{result.amountPaid}</TableCell>
+                        <TableCell>{result.transactionAmountBalance}</TableCell>
+                        <TableCell>{result.invoiceNo}</TableCell>
                         <TableCell>{result.invoiceDate}</TableCell>
-                        <TableCell>{result.drRate}</TableCell>
-                        <TableCell>{result.drWait}</TableCell>
-                        <TableCell>{result.drPaid}</TableCell>
-                        <TableCell>{result.drBalance}</TableCell>
-                        <TableCell>{result.deductions}</TableCell>
-                        <TableCell>{result.contact}</TableCell>
                         <TableCell>{result.remarks}</TableCell>
                         <TableCell>{result.created}</TableCell>
-                        <TableCell>{result.user}</TableCell>
                       </TableRow>
                     ))}
                   </StyledTableBody>
