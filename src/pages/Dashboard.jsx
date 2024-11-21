@@ -299,9 +299,12 @@ const Dashboard = () => {
     return () => unsubscribe();
   }, []);
 
-  const openModal = () => {
-    setFormData(initialFormData); // Clear all fields by resetting to initial state
-    setIsModalOpen(true);
+  // const openModal = () => {
+  //   setFormData(initialFormData); // Clear all fields by resetting to initial state
+  //   setIsModalOpen(true);
+  //};
+  const openNewTab = () => {
+    window.open('/add-new-trip', '_blank');
   };
   const closeModal = () => setIsModalOpen(false);
 
@@ -401,7 +404,7 @@ const Dashboard = () => {
             {loggedIn && (
               <>
                 <Button color="#343a40" onClick={handleExport}><FaFileExport /> Export</Button>
-                <Button color="#28a745" onClick={openModal}><FaPlus /> Add New</Button>
+                <Button color="#28a745" onClick={openNewTab}><FaPlus /> Add New</Button>
               </>
             )}
           </ButtonGroup>

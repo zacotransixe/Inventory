@@ -10,6 +10,7 @@ import PRT from './pages/PRT'; // Import PRT page
 import Admin from './pages/Admin'; // Import Admin page
 import About from './pages/About'; // Import About page
 import Home from './pages/Home';
+import AddNewTrip from './pages/AddNewTrip';
 
 const App = () => {
   return (
@@ -18,6 +19,8 @@ const App = () => {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/trips" element={<Dashboard />} />
+        <Route path="/add-new-trip" component={<AddNewTrip />} />
+
         <Route path="/expenses" element={<Expenses />} /> {/* Define route for Expenses */}
         <Route path="/reports" element={<Reports />} />
         <Route path="/customers" element={<Customers />} />
