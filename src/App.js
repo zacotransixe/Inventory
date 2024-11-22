@@ -19,9 +19,9 @@ const App = () => {
         <Route path="/" element={<Home />} />
         <Route path="/login" element={<Login />} />
         <Route path="/trips" element={<Dashboard />} />
-        <Route path="/add-new-trip" component={<AddNewTrip />} />
+        <Route path="/addnewtrip" element={<AddNewTrip />} />
 
-        <Route path="/expenses" element={<Expenses />} /> {/* Define route for Expenses */}
+        <Route path="/expenses" element={<Expenses />} />
         <Route path="/reports" element={<Reports />} />
         <Route path="/customers" element={<Customers />} />
         <Route path="/prt" element={<PRT />} /> {/* Add route for PRT */}

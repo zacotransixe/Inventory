@@ -304,7 +304,7 @@ const Dashboard = () => {
   //   setIsModalOpen(true);
   //};
   const openNewTab = () => {
-    window.open('/add-new-trip', '_blank');
+    window.open('/addnewtrip', '_blank');
   };
   const closeModal = () => setIsModalOpen(false);
 
@@ -350,25 +350,49 @@ const Dashboard = () => {
 
   const handleSearchSubmit = async () => {
     setLoading(true);
+  
     try {
+      // Convert DD-MM-YYYY to YYYY-MM-DD
+      const formatDate = (date) => {
+        const [day, month, year] = date.split('-');
+        return `${year}-${month}-${day}`;
+      };
+  
+      const fromDate = searchData.fromDate ? formatDate(searchData.fromDate) : null;
+      const toDate = searchData.toDate ? formatDate(searchData.toDate) : null;
+  
+      console.log('Formatted From Date:', fromDate);
+      console.log('Formatted To Date:', toDate);
+  
+      // Build the Firestore query
       const searchQuery = query(
         collection(db, 'trips'),
-        ...(searchData.fromDate ? [where('tripDate', '>=', searchData.fromDate)] : []),
-        ...(searchData.toDate ? [where('tripDate', '<=', searchData.toDate)] : [])
+        ...(fromDate ? [where('tripDate', '>=', fromDate)] : []),
+        ...(toDate ? [where('tripDate', '<=', toDate)] : [])
       );
-
+  
       const querySnapshot = await getDocs(searchQuery);
-      setSearchResults(querySnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() })));
-
-      if (querySnapshot.empty) {
-        toast.info("No records found for the specified date range.");
+  
+      // Process results
+      const results = querySnapshot.docs.map((doc) => ({
+        id: doc.id,
+        ...doc.data(),
+      }));
+  
+      if (results.length === 0) {
+        toast.info('No records found for the specified date range.');
+      } else {
+        setSearchResults(results);
       }
     } catch (error) {
       toast.error('Error fetching data: ' + error.message);
+    } finally {
+      setLoading(false);
     }
-    setLoading(false);
   };
-
+  
+  
+  
 
   const handleExport = () => {
     if (searchResults.length === 0) {

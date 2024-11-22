@@ -101,13 +101,15 @@ const Expenses = () => {
     date: '',
   });
 
-  // Fetch expenses from Firestore
   const fetchExpenses = async () => {
-    const expensesCollection = collection(db, 'expenses');
+    console.log("Fetching expenses...");
+    const expensesCollection = collection(db, "expenses");
     const expenseSnapshot = await getDocs(expensesCollection);
-    const expensesList = expenseSnapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
+    const expensesList = expenseSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
+    console.log("Expenses fetched:", expensesList);
     setExpensesData(expensesList);
   };
+  
 
   useEffect(() => {
     fetchExpenses();
@@ -130,29 +132,41 @@ const Expenses = () => {
   };
 
   const handleSaveExpense = async () => {
+    console.log("Initiating save process...");
+    alert("Initiating save process..."); // Fallback for debugging
+  
     if (!expenseFormData.title || !expenseFormData.amount || !expenseFormData.date) {
-      toast.error('Please fill out all fields');
+      console.error("Validation failed: Missing required fields.", expenseFormData);
+      alert("Validation failed: Please fill out all fields");
+      toast.error("Please fill out all fields");
       return;
     }
-
+  
     try {
-      if (selectedExpense) {
-        // Update existing expense
-        const expenseRef = doc(db, 'expenses', selectedExpense.id);
-        await updateDoc(expenseRef, expenseFormData);
-        toast.success('Expense updated successfully!');
-      } else {
-        // Add new expense
-        await addDoc(collection(db, 'expenses'), expenseFormData);
-        toast.success('Expense added successfully!');
-      }
-
+      const newExpense = {
+        ...expenseFormData,
+        created: new Date().toISOString(),
+      };
+  
+      console.log("Saving expense data:", newExpense);
+      alert("Saving expense data: " + JSON.stringify(newExpense));
+  
+      const docRef = await addDoc(collection(db, "expenses"), newExpense);
+  
+      console.log("Expense saved with ID:", docRef.id);
+      alert("Expense saved with ID: " + docRef.id);
+  
+      toast.success("Expense added successfully!");
       closeModal();
-      fetchExpenses(); // Refresh expenses list
+      fetchExpenses();
     } catch (error) {
-      toast.error('Error saving expense: ' + error.message);
+      console.error("Error saving expense:", error.message);
+      alert("Error saving expense: " + error.message);
+      toast.error("Error saving expense: " + error.message);
     }
   };
+  
+  
 
   const handleEditExpense = (expense) => {
     setSelectedExpense(expense);
@@ -193,9 +207,18 @@ const Expenses = () => {
             <Button color="#17a2b8" hoverColor="#138496">
               <FaSearch /> Search
             </Button>
-            <Button color="#28a745" hoverColor="#218838" onClick={openModal}>
-              <FaPlus /> Add New
-            </Button>
+            <Button
+  color="#28a745"
+  hoverColor="#218838"
+  onClick={() => {
+    console.log("Save button clicked");
+    alert("Save button clicked");
+    handleSaveExpense();
+  }}
+>
+  Save
+</Button>
+
           </ButtonGroup>
         </SearchBar>
 
@@ -269,9 +292,17 @@ const Expenses = () => {
                 />
               </div>
               <ButtonGroup>
-                <Button color="#28a745" hoverColor="#218838" onClick={handleSaveExpense}>
-                  Save
-                </Button>
+              <Button
+  color="#28a745"
+  hoverColor="#218838"
+  onClick={() => {
+    console.log("Save button clicked");
+    handleSaveExpense();
+  }}
+>
+  Save
+</Button>
+
                 <Button color="#dc3545" hoverColor="#c9302c" onClick={closeModal}>
                   Cancel
                 </Button>
