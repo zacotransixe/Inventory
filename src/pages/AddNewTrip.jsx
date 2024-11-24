@@ -5,6 +5,8 @@ import { collection, addDoc } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import Sidebar from '../components/Sidebar';
+
 
 // Styled Components
 const DashboardContainer = styled.div`
@@ -12,6 +14,8 @@ const DashboardContainer = styled.div`
   min-height: 100vh;
   background-color: #f9f9f9;
 `;
+
+
 
 const ContentContainer = styled.div`
   flex-grow: 1;
@@ -24,6 +28,51 @@ const InputWrapper = styled.div`
   display: flex;
   flex-direction: column;
   margin-bottom: 1rem;
+`;
+
+const SectionContainer = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* Two columns */
+  gap: 20px; /* Space between controls */
+  margin-bottom: 20px;
+`;
+
+const Label = styled.label`
+  font-weight: bold;
+  margin-bottom: 5px;
+`;
+
+const FormLabel = styled.label`
+  font-weight: bold;
+  margin-bottom: 5px;
+`;
+
+const CloseButton = styled.button`
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  color: #333;
+  font-size: 18px;
+  cursor: pointer;
+
+  &:hover {
+    color: #dc3545;
+  }
+`;
+
+const Select = styled.select`
+  padding: 0.5rem;
+  font-size: 14px;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  outline: none;
+  width: 100%;
+  background-color: #fff;
+  &:focus {
+    border-color: #007bff;
+  }
 `;
 
 const InputLabel = styled.label`
@@ -66,16 +115,60 @@ const CancelButton = styled.button`
 const AddNewTrip = () => {
   const [loggedIn, setLoggedIn] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [isModalOpen, setIsModalOpen] = useState(false);
+ 
 
   const initialFormData = {
+    slNo: '',
     tripDate: '',
     truckPlateNumber: '',
+    truckDriverName: '',
+    truckCategory: '',
+    deliveryNote: '',
     customerName: '',
-    driverName: '',
+    cO: '',
+    firstLoading: '',
+    firstOffloading: '',
+    secondLoading: '',
+    secondOffloading: '',
+    customerRate: '',
+    customerWaitingCharges: '',
+    amountReceived: '',
+    amountBalance: '',
+    driverRate: '',
+    driverWaitingCharges: '',
+    amountPaid: '',
+    transactionAmountBalance: '',
+    invoiceNo: '',
+    invoiceDate: '',
     remarks: '',
   };
 
-  const [formData, setFormData] = useState(initialFormData);
+  const [formData, setFormData] = useState({
+    slNo: '',
+    tripDate: '',
+    truckPlateNumber: '',
+    truckDriverName: '',
+    truckCategory: '',
+    deliveryNote: '',
+    customerName: '',
+    cO: '',
+    firstLoading: '',
+    firstOffloading: '',
+    secondLoading: '',
+    secondOffloading: '',
+    customerRate: '',
+    customerWaitingCharges: '',
+    amountReceived: '',
+    amountBalance: '',
+    driverRate: '',
+    driverWaitingCharges: '',
+    amountPaid: '',
+    transactionAmountBalance: '',
+    invoiceNo: '',
+    invoiceDate: '',
+    remarks: '',
+  });
 
   // Check if user is logged in
   useEffect(() => {
@@ -85,6 +178,10 @@ const AddNewTrip = () => {
     });
     return () => unsubscribe();
   }, []);
+
+  const closeModal = () => setIsModalOpen(false);
+
+
 
   // Handle input changes
   const handleInputChange = (e) => {
@@ -133,71 +230,178 @@ const AddNewTrip = () => {
 
   return (
     <DashboardContainer>
+    <Sidebar />
+
       <ContentContainer>
-        <h2>Add New Trip</h2>
-        <form onSubmit={handleSubmit}>
-          <InputWrapper>
-            <InputLabel>Trip Date</InputLabel>
-            <Input
-              type="date"
-              name="tripDate"
-              value={formData.tripDate}
-              onChange={handleInputChange}
-              required
-            />
-          </InputWrapper>
+        
 
-          <InputWrapper>
-            <InputLabel>Truck Plate Number</InputLabel>
-            <Input
-              type="text"
-              name="truckPlateNumber"
-              value={formData.truckPlateNumber}
-              onChange={handleInputChange}
-              required
-            />
-          </InputWrapper>
+        
+      <form onSubmit={handleSubmit}>
+  <h3>Trip Information</h3>
+  <SectionContainer>
+    <InputWrapper>
+      <Label>Date:</Label>
+      <Input
+        type="date"
+        name="tripDate"
+        value={formData.tripDate}
+        onChange={handleInputChange}
+        required
+      />
+    </InputWrapper>
+    <InputWrapper>
+      <Label>Truck Plate Number:</Label>
+      <Input
+        type="text"
+        name="truckPlateNumber"
+        value={formData.truckPlateNumber}
+        onChange={handleInputChange}
+        required
+      />
+    </InputWrapper>
+  </SectionContainer>
 
-          <InputWrapper>
-            <InputLabel>Customer Name</InputLabel>
-            <Input
-              type="text"
-              name="customerName"
-              value={formData.customerName}
-              onChange={handleInputChange}
-              required
-            />
-          </InputWrapper>
+  <h3>Truck Info</h3>
+  <SectionContainer>
+    <InputWrapper>
+      <Label>Truck Driver Name:</Label>
+      <Input
+        type="text"
+        name="truckDriverName"
+        value={formData.truckDriverName}
+        onChange={handleInputChange}
+        required
+      />
+    </InputWrapper>
+    <InputWrapper>
+      <Label>Truck Category:</Label>
+      <Input
+        type="text"
+        name="truckCategory"
+        value={formData.truckCategory}
+        onChange={handleInputChange}
+        required
+      />
+    </InputWrapper>
+    <InputWrapper>
+      <Label>Delivery Note:</Label>
+      <Select
+        name="deliveryNote"
+        value={formData.deliveryNote}
+        onChange={handleInputChange}
+        required
+      >
+        <option value="">Select Status</option>
+        <option value="Received">Received</option>
+        <option value="Not Received">Not Received</option>
+      </Select>
+    </InputWrapper>
+    <InputWrapper>
+      <Label>Customer Name:</Label>
+      <Input
+        type="text"
+        name="customerName"
+        value={formData.customerName}
+        onChange={handleInputChange}
+        required
+      />
+    </InputWrapper>
+  </SectionContainer>
 
-          <InputWrapper>
-            <InputLabel>Driver Name</InputLabel>
-            <Input
-              type="text"
-              name="driverName"
-              value={formData.driverName}
-              onChange={handleInputChange}
-            />
-          </InputWrapper>
+  <h3>Loading and Offloading Details</h3>
+  <SectionContainer>
+    <InputWrapper>
+      <Label>First Loading:</Label>
+      <Input
+        type="text"
+        name="firstLoading"
+        value={formData.firstLoading}
+        onChange={handleInputChange}
+        required
+      />
+    </InputWrapper>
+    <InputWrapper>
+      <Label>First Offloading:</Label>
+      <Input
+        type="text"
+        name="firstOffloading"
+        value={formData.firstOffloading}
+        onChange={handleInputChange}
+        required
+      />
+    </InputWrapper>
+    <InputWrapper>
+      <Label>Second Loading:</Label>
+      <Input
+        type="text"
+        name="secondLoading"
+        value={formData.secondLoading}
+        onChange={handleInputChange}
+      />
+    </InputWrapper>
+    <InputWrapper>
+      <Label>Second Offloading:</Label>
+      <Input
+        type="text"
+        name="secondOffloading"
+        value={formData.secondOffloading}
+        onChange={handleInputChange}
+      />
+    </InputWrapper>
+  </SectionContainer>
 
-          <InputWrapper>
-            <InputLabel>Remarks</InputLabel>
-            <Input
-              type="text"
-              name="remarks"
-              value={formData.remarks}
-              onChange={handleInputChange}
-            />
-          </InputWrapper>
+  <h3>Transaction Details</h3>
+  <SectionContainer>
+    <InputWrapper>
+      <Label>Customer Rate:</Label>
+      <Input
+        type="number"
+        name="customerRate"
+        value={formData.customerRate}
+        onChange={handleInputChange}
+        required
+      />
+    </InputWrapper>
+    <InputWrapper>
+      <Label>Customer Waiting Charges:</Label>
+      <Input
+        type="number"
+        name="customerWaitingCharges"
+        value={formData.customerWaitingCharges}
+        onChange={handleInputChange}
+        required
+      />
+    </InputWrapper>
+    <InputWrapper>
+      <Label>Amount Received:</Label>
+      <Input
+        type="number"
+        name="amountReceived"
+        value={formData.amountReceived}
+        onChange={handleInputChange}
+        required
+      />
+    </InputWrapper>
+    <InputWrapper>
+      <Label>Amount Balance:</Label>
+      <Input
+        type="number"
+        name="amountBalance"
+        value={formData.amountBalance}
+        onChange={handleInputChange}
+        required
+      />
+    </InputWrapper>
+  </SectionContainer>
 
-          <SubmitButtonGroup>
-            <SaveButton type="submit" disabled={loading}>
-              {loading ? 'Saving...' : 'Save'}
-            </SaveButton>
-            <CancelButton type="button" onClick={() => setFormData(initialFormData)}>
-              Cancel
-            </CancelButton>
-          </SubmitButtonGroup>
-        </form>
+  <SubmitButtonGroup>
+    <SaveButton type="submit">Save</SaveButton>
+    <CancelButton type="button" onClick={closeModal}>Cancel</CancelButton>
+  </SubmitButtonGroup>
+</form>
+   
+          
+
         <ToastContainer />
       </ContentContainer>
     </DashboardContainer>

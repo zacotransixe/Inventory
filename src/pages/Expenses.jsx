@@ -101,6 +101,16 @@ const Expenses = () => {
     date: '',
   });
 
+  const isValidForm = () => {
+    const { title, amount, date } = expenseFormData;
+    if (!title || !amount || !date) {
+      toast.error('Please fill in all fields.');
+      return false;
+    }
+    return true;
+  };
+
+
   const fetchExpenses = async () => {
     console.log("Fetching expenses...");
     const expensesCollection = collection(db, "expenses");
@@ -123,6 +133,7 @@ const Expenses = () => {
 
   const closeModal = () => setModalOpen(false);
 
+  
   const handleInputChange = (e) => {
     const { name, value } = e.target;
     setExpenseFormData((prevData) => ({
@@ -131,16 +142,9 @@ const Expenses = () => {
     }));
   };
 
+ 
   const handleSaveExpense = async () => {
-    console.log("Initiating save process...");
-    alert("Initiating save process..."); // Fallback for debugging
-  
-    if (!expenseFormData.title || !expenseFormData.amount || !expenseFormData.date) {
-      console.error("Validation failed: Missing required fields.", expenseFormData);
-      alert("Validation failed: Please fill out all fields");
-      toast.error("Please fill out all fields");
-      return;
-    }
+    if (!isValidForm()) return;
   
     try {
       const newExpense = {
@@ -148,24 +152,19 @@ const Expenses = () => {
         created: new Date().toISOString(),
       };
   
-      console.log("Saving expense data:", newExpense);
-      alert("Saving expense data: " + JSON.stringify(newExpense));
+      console.log("Attempting to save expense:", newExpense);
   
-      const docRef = await addDoc(collection(db, "expenses"), newExpense);
+      await addDoc(collection(db, "expenses"), newExpense);
   
-      console.log("Expense saved with ID:", docRef.id);
-      alert("Expense saved with ID: " + docRef.id);
-  
+      console.log("Expense saved successfully!");
       toast.success("Expense added successfully!");
       closeModal();
       fetchExpenses();
     } catch (error) {
       console.error("Error saving expense:", error.message);
-      alert("Error saving expense: " + error.message);
       toast.error("Error saving expense: " + error.message);
     }
   };
-  
   
 
   const handleEditExpense = (expense) => {
@@ -174,6 +173,11 @@ const Expenses = () => {
     setModalOpen(true);
   };
 
+  const formatDate = (timestamp) => {
+    if (!timestamp) return '';
+    return timestamp.toDate().toLocaleDateString(); // Converts to a readable date
+  };
+  
   const handleDeleteExpense = async (expenseId) => {
     if (window.confirm('Are you sure you want to delete this expense?')) {
       try {
@@ -210,14 +214,11 @@ const Expenses = () => {
             <Button
   color="#28a745"
   hoverColor="#218838"
-  onClick={() => {
-    console.log("Save button clicked");
-    alert("Save button clicked");
-    handleSaveExpense();
-  }}
+  onClick={openModal} // Ensure it calls `openModal` to open the popup
 >
-  Save
+  Add New
 </Button>
+
 
           </ButtonGroup>
         </SearchBar>
@@ -318,3 +319,4 @@ const Expenses = () => {
 };
 
 export default Expenses;
+
