@@ -92,6 +92,8 @@ const ActionButtons = styled.div`
 `;
 
 const Expenses = () => {
+  const [loading, setLoading] = useState(false);
+
   const [modalOpen, setModalOpen] = useState(false);
   const [expensesData, setExpensesData] = useState([]);
   const [selectedExpense, setSelectedExpense] = useState(null);
@@ -112,13 +114,29 @@ const Expenses = () => {
 
 
   const fetchExpenses = async () => {
-    console.log("Fetching expenses...");
-    const expensesCollection = collection(db, "expenses");
-    const expenseSnapshot = await getDocs(expensesCollection);
-    const expensesList = expenseSnapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }));
-    console.log("Expenses fetched:", expensesList);
-    setExpensesData(expensesList);
+    setLoading(true); // Show loader
+    try {
+      const expensesCollection = collection(db, "expenses");
+      const expenseSnapshot = await getDocs(expensesCollection);
+      const expensesList = expenseSnapshot.docs.map((doc) => {
+        const data = doc.data();
+        return {
+          id: doc.id,
+          ...data,
+          date: data.date instanceof Object && data.date.toDate 
+            ? data.date.toDate().toLocaleDateString() 
+            : data.date,
+        };
+      });
+      setExpensesData(expensesList);
+    } catch (error) {
+      console.error("Error fetching expenses:", error.message);
+      toast.error("Error fetching expenses: " + error.message);
+    } finally {
+      setLoading(false); // Hide loader
+    }
   };
+  
   
 
   useEffect(() => {
@@ -168,10 +186,18 @@ const Expenses = () => {
   
 
   const handleEditExpense = (expense) => {
-    setSelectedExpense(expense);
-    setExpenseFormData(expense);
-    setModalOpen(true);
-  };
+    console.log('Selected Expense for Editing:', expense); // Log the selected expense
+    setSelectedExpense(expense); // Store the selected expense
+    setExpenseFormData({
+      title: expense.description || '',
+      amount: expense.amount || '',
+      date: expense.date || '',
+    }); // Prefill the form data
+    setModalOpen(true); // Open the modal
+};
+
+  
+  
 
   const formatDate = (timestamp) => {
     if (!timestamp) return '';
@@ -208,9 +234,15 @@ const Expenses = () => {
           </InputGroup>
 
           <ButtonGroup>
-            <Button color="#17a2b8" hoverColor="#138496">
-              <FaSearch /> Search
-            </Button>
+          <Button color="#17a2b8" hoverColor="#138496" onClick={fetchExpenses} disabled={loading}>
+  {loading ? (
+    <span>Loading...</span>
+  ) : (
+    <>
+      <FaSearch /> Search
+    </>
+  )}
+</Button>
             <Button
   color="#28a745"
   hoverColor="#218838"
@@ -235,8 +267,8 @@ const Expenses = () => {
             </thead>
             <tbody>
               {expensesData.map((expense) => (
-                <tr key={expense.id}>
-                  <td>{expense.title}</td>
+                <tr>
+                  <td>{expense.description}</td>
                   <td>{expense.amount}</td>
                   <td>{expense.date}</td>
                   <td>
@@ -256,7 +288,7 @@ const Expenses = () => {
         </TableContainer>
 
         {modalOpen && (
-          <Modal onClose={closeModal}>
+          <Modal onClose={closeModal} selectedExpense={selectedExpense}>
             <h2>{selectedExpense ? 'Edit Expense' : 'Add New Expense'}</h2>
             <form>
               <div>

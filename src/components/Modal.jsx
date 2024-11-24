@@ -1,6 +1,8 @@
-// src/components/Modal.jsx
-import React from 'react';
+import React, {useState, useEffect} from 'react';
 import styled from 'styled-components';
+import { db } from '../firebase'; // Import Firebase configuration
+import { collection, addDoc, doc, updateDoc } from 'firebase/firestore';
+import { toast, ToastContainer } from 'react-toastify'; // Import ToastContainer here
 import Button from './Button';
 
 const ModalOverlay = styled.div`
@@ -83,41 +85,122 @@ const StyledButton = styled(Button)`
   }
 `;
 
-const Modal = ({ onClose }) => {
+const Modal = ({ onClose, selectedExpense }) => {
+  const [expenseData, setExpenseData] = useState({
+    date: '',
+    amount: '',
+    description: '',
+  });
+
+  // Prefill data if editing
+  useEffect(() => {
+    if (selectedExpense) {
+      console.log('Modal Loaded with Selected Expense:', selectedExpense); // Log selected expense details
+      setExpenseData({
+        date: selectedExpense.date || '',
+        amount: selectedExpense.amount || '',
+        description: selectedExpense.description || '',
+      });
+    } else {
+      console.log('Modal Loaded for New Expense'); // Log when no selected expense
+    }
+  }, [selectedExpense]);
+
+  const handleInputChange = (e) => {
+    const { id, value } = e.target;
+    console.log(`Input Changed - ID: ${id}, Value: ${value}`); // Log input changes
+    setExpenseData((prevState) => ({
+      ...prevState,
+      [id]: value,
+    }));
+  };
+
+  const handleSaveExpense = async () => {
+    console.log('Attempting to Save Expense:', expenseData); // Log before saving
+    const { date, amount, description } = expenseData;
+
+    if (!date || !amount || !description) {
+      console.error('Validation Error: Missing Required Fields', expenseData); // Log validation errors
+      toast.error('Please fill in all fields before saving.');
+      return;
+    }
+
+    try {
+      if (selectedExpense) {
+        console.log('Updating Existing Expense:', selectedExpense.id); // Log when updating
+        const docRef = doc(db, 'expenses', selectedExpense.id);
+        await updateDoc(docRef, {
+          date,
+          amount,
+          description,
+          updatedAt: new Date().toISOString(), // Add updated timestamp
+        });
+        toast.success('Expense updated successfully!');
+      } else {
+        console.log('Adding New Expense:', expenseData); // Log when adding new expense
+        const docRef = await addDoc(collection(db, 'expenses'), {
+          ...expenseData,
+          createdAt: new Date().toISOString(), // Add created timestamp
+        });
+        console.log('New Expense Saved with ID:', docRef.id); // Log new document ID
+        toast.success('Expense saved successfully!');
+      }
+
+      onClose(); // Close the modal after saving
+    } catch (error) {
+      console.error('Error Saving Expense:', error.message); // Log error details
+      toast.error('Error saving expense: ' + error.message);
+    }
+  };
+
   return (
     <ModalOverlay>
       <ModalContent>
-        <ModalHeader>Expenses</ModalHeader>
+        <ModalHeader>{selectedExpense ? 'Edit Expense' : 'Add Expense'}</ModalHeader>
+
         <FormGroup>
-          <Label htmlFor="expense-id">ID</Label>
-          <Input type="text" id="expense-id" defaultValue="0" readOnly />
+          <Label htmlFor="date">Date</Label>
+          <Input
+            type="date"
+            id="date"
+            value={expenseData.date}
+            onChange={handleInputChange}
+          />
         </FormGroup>
         <FormGroup>
-          <Label htmlFor="expense-date">Date</Label>
-          <Input type="date" id="expense-date" defaultValue="2024-08-26" />
+          <Label htmlFor="amount">Amount</Label>
+          <Input
+            type="number"
+            id="amount"
+            placeholder="Enter amount"
+            value={expenseData.amount}
+            onChange={handleInputChange}
+          />
         </FormGroup>
         <FormGroup>
-          <Label htmlFor="expense-amount">Amount</Label>
-          <Input type="number" id="expense-amount" placeholder="Enter amount" />
-        </FormGroup>
-        <FormGroup>
-          <Label htmlFor="expense-description">Description</Label>
-          <Input type="text" id="expense-description" placeholder="Enter description" />
+          <Label htmlFor="description">Description</Label>
+          <Input
+            type="text"
+            id="description"
+            placeholder="Enter description"
+            value={expenseData.description}
+            onChange={handleInputChange}
+          />
         </FormGroup>
         <ButtonGroup>
-          <StyledButton color="#28a745" hoverColor="#218838">
+          <StyledButton color="#28a745" hoverColor="#218838" onClick={handleSaveExpense}>
             Save
           </StyledButton>
           <StyledButton color="#ffc107" hoverColor="#e0a800" onClick={onClose}>
             Cancel
           </StyledButton>
-          <StyledButton color="#d9534f" hoverColor="#c9302c">
-            Delete
-          </StyledButton>
         </ButtonGroup>
       </ModalContent>
+      <ToastContainer />
     </ModalOverlay>
   );
 };
 
 export default Modal;
+
+

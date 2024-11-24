@@ -111,27 +111,41 @@ const Sidebar = () => {
           <StyledNavLink to="/">Home</StyledNavLink>
         </li>
         <li>
-          <StyledNavLink to="/trips">Trips</StyledNavLink>
-        </li>
+  <StyledNavLink to="/trips" target="_blank" rel="noopener noreferrer">
+    Trips
+  </StyledNavLink>
+</li>
+<li>
+  <StyledNavLink to="/expenses" target="_blank" rel="noopener noreferrer">
+    Expenses
+  </StyledNavLink>
+</li>
+<li>
+  <StyledNavLink to="/reports" target="_blank" rel="noopener noreferrer">
+    Reports
+  </StyledNavLink>
+</li>
+<li>
+  <StyledNavLink to="/customers" target="_blank" rel="noopener noreferrer">
+    Customers
+  </StyledNavLink>
+</li>
+<li>
+  <StyledNavLink to="/prt" target="_blank" rel="noopener noreferrer">
+    PRT
+  </StyledNavLink>
+</li>
+<li>
+  <StyledNavLink to="/admin" target="_blank" rel="noopener noreferrer">
+    Admin
+  </StyledNavLink>
+</li>
+<li>
+  <StyledNavLink to="/about" target="_blank" rel="noopener noreferrer">
+    About
+  </StyledNavLink>
+</li>
 
-        <li>
-          <StyledNavLink to="/expenses">Expenses</StyledNavLink>
-        </li>
-        <li>
-          <StyledNavLink to="/reports">Reports</StyledNavLink>
-        </li>
-        <li>
-          <StyledNavLink to="/customers">Customers</StyledNavLink>
-        </li>
-        <li>
-          <StyledNavLink to="/prt">PRT</StyledNavLink>
-        </li>
-        <li>
-          <StyledNavLink to="/admin">Admin</StyledNavLink>
-        </li>
-        <li>
-          <StyledNavLink to="/about">About</StyledNavLink>
-        </li>
 
       </NavList>
 
