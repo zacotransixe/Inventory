@@ -265,7 +265,6 @@ const Customers = () => {
 
   return (
     <CustomersContainer>
-      <Sidebar />
       <ContentContainer>
         <ButtonContainer>
           <StylishButton onClick={handleAddCustomer}>Add Customer</StylishButton>

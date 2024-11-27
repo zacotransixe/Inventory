@@ -34,7 +34,6 @@ const Text = styled.p`
 const PRT = () => {
     return (
         <PRTContainer>
-            <Sidebar />
             <ContentContainer>
                 <Heading>PRT Page</Heading>
                 <Text>This is the PRT page. Here you can add information about PRT-related content.</Text>

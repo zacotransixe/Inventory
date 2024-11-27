@@ -34,7 +34,6 @@ const Text = styled.p`
 const About = () => {
     return (
         <AboutContainer>
-            <Sidebar />
             <ContentContainer>
                 <Heading>About Page</Heading>
                 <Text>This is the About page. Learn more about this application and its features here.</Text>

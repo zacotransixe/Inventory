@@ -219,7 +219,6 @@ const Expenses = () => {
 
   return (
     <ExpensesContainer>
-      <Sidebar />
 
       <ContentContainer>
         <SearchBar>

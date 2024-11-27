@@ -34,7 +34,6 @@ const Text = styled.p`
 const Admin = () => {
     return (
         <AdminContainer>
-            <Sidebar />
             <ContentContainer>
                 <Heading>Admin Page</Heading>
                 <Text>This is the Admin page. Manage administrative tasks here.</Text>

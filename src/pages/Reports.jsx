@@ -68,7 +68,6 @@ const Reports = () => {
 
     return (
         <ReportsContainer>
-            <Sidebar />
             <ContentContainer>
                 {/* Button Card at the top */}
                 <ButtonCard>
