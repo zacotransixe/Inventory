@@ -26,7 +26,6 @@ const ContentContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 20px;
-  max-width: 1200px;
   margin: auto;
   margin-left: 20px; /* Add space between the sidebar and content */
 `;
