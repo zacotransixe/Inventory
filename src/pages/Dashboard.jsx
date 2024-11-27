@@ -24,11 +24,13 @@ const ContentContainer = styled.div`
   flex-grow: 1;
   padding: 2rem;
   display: flex;
-  flex-direction: column; 
+  flex-direction: column;
   gap: 20px;
   max-width: 1200px;
   margin: auto;
+  margin-left: 20px; /* Add space between the sidebar and content */
 `;
+
 
 const SearchBar = styled.div`
   display: grid;
@@ -99,9 +101,13 @@ const RightSideContainer = styled.div`
 `;
 
 const TableWrapper = styled.div`
-  max-width: 100%;
-  overflow-x: auto;
+  height: 400px; /* Set a fixed height for the table */
+  max-width: 900px; /* Set a fixed width for the table */
+  overflow: auto; /* Enable both horizontal and vertical scrolling */
+  border: 1px solid #ddd; /* Optional border around the table */
   margin-top: 20px;
+  margin-left: auto; /* Center align the table */
+  margin-right: auto;
 `;
 
 const StyledTable = styled(Table)`
@@ -119,6 +125,9 @@ const StyledTableHead = styled(TableHead)`
     text-align: left;
     color: #fff;
     font-weight: bold;
+    position: sticky; /* Make header sticky */
+    top: 0; /* Stick the header to the top of the scrollable container */
+    z-index: 1; /* Ensure header stays above the rows */
   }
 `;
 
@@ -135,9 +144,9 @@ const StyledTableBody = styled(TableBody)`
     padding: 12px;
     border-bottom: 1px solid #ddd;
     text-align: left;
-    white-space: nowrap;
-    overflow: hidden;
-    text-overflow: ellipsis;
+    white-space: nowrap; /* Prevent text wrapping */
+    overflow: hidden; /* Hide overflowing text */
+    text-overflow: ellipsis; /* Add ellipsis to overflowing text */
   }
 `;
 
@@ -232,6 +241,15 @@ const CloseButton = styled.button`
   }
 `;
 
+const SidebarContainer = styled.div`
+  width: 250px; /* Set a fixed width for the sidebar */
+  flex-shrink: 0; /* Prevent the sidebar from shrinking */
+  background-color: #343a40; /* Example background color */
+  color: #fff;
+  height: 100vh; /* Full viewport height */
+`;
+
+
 const Dashboard = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [customers, setCustomers] = useState([]);
@@ -295,8 +313,8 @@ const Dashboard = () => {
   });
 
   useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => setLoggedIn(!!user));
-    return () => unsubscribe();
+    const userData = JSON.parse(localStorage.getItem('userData'));
+    setLoggedIn(userData?.isLoggedIn || false);
   }, []);
 
   // const openModal = () => {
@@ -352,10 +370,20 @@ const Dashboard = () => {
     setLoading(true);
   
     try {
-      // Convert DD-MM-YYYY to YYYY-MM-DD
+      // Check and format dates if necessary
       const formatDate = (date) => {
-        const [day, month, year] = date.split('-');
-        return `${year}-${month}-${day}`;
+        if (date.includes('-')) {
+          const parts = date.split('-');
+          if (parts[0].length === 4) {
+            // Already in YYYY-MM-DD format
+            return date;
+          } else {
+            // Convert from DD-MM-YYYY to YYYY-MM-DD
+            const [day, month, year] = parts;
+            return `${year}-${month}-${day}`;
+          }
+        }
+        return date;
       };
   
       const fromDate = searchData.fromDate ? formatDate(searchData.fromDate) : null;
@@ -392,8 +420,6 @@ const Dashboard = () => {
   };
   
   
-  
-
   const handleExport = () => {
     if (searchResults.length === 0) {
       toast.error('No data to export');
@@ -411,7 +437,9 @@ const Dashboard = () => {
 
   return (
     <DashboardContainer>
-      <Sidebar />
+      <SidebarContainer>
+    <Sidebar />
+  </SidebarContainer>
 
       <ContentContainer>
         <SearchBar>
@@ -509,261 +537,7 @@ const Dashboard = () => {
           </PaginationControls>
         </RightSideContainer>
 
-        <Modal isOpen={isModalOpen} onRequestClose={closeModal} contentLabel="Add New Trip" ariaHideApp={false} style={{
-          overlay: { backgroundColor: 'rgba(0, 0, 0, 0.6)' },
-          content: { borderRadius: '15px', padding: '20px', maxWidth: '900px', margin: 'auto' }
-        }}>
-          <CloseButton onClick={closeModal}><FaTimes /></CloseButton>
-          <h2 style={{ textAlign: 'center' }}>Add New Trip</h2>
-          <ModalForm onSubmit={handleSubmit}>
-            <h3>Trip Information</h3>
-            <InputWrapper>
-              <FormLabel>Date:</FormLabel>
-              <Input type="date" name="tripDate" value={formData.tripDate} onChange={handleInputChange} required />
-            </InputWrapper>
-
-            <h3>Truck Info</h3>
-            <SectionContainer>
-              <div>
-                <Label>Truck Plate Number:</Label>
-                <Input
-                  type="text"
-                  name="truckPlateNumber"
-                  value={formData.truckPlateNumber}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div>
-                <Label>Truck Driver Name:</Label>
-                <Input
-                  type="text"
-                  name="truckDriverName"
-                  value={formData.truckDriverName}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div>
-                <Label>Truck Category:</Label>
-                <Input
-                  type="text"
-                  name="truckCategory"
-                  value={formData.truckCategory}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div>
-                <Label>Delivery Note:</Label>
-                <Select
-                  name="deliveryNote"
-                  value={formData.deliveryNote}
-                  onChange={handleInputChange}
-                  required
-                >
-                  <option value="">Select Status</option>
-                  <option value="Received">Received</option>
-                  <option value="Not Received">Not Received</option>
-                </Select>
-              </div>
-            </SectionContainer>
-
-            <h3>Customer Info</h3>
-            <SectionContainer>
-              <div>
-                <Label>Customer Name:</Label>
-                <Input
-                  type="text"
-                  name="customerName"
-                  value={formData.customerName}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div>
-                <Label>C/O:</Label>
-                <Input
-                  type="text"
-                  name="cO"
-                  value={formData.cO}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-            </SectionContainer>
-
-
-            <h3>Loading and Offloading Details</h3>
-            <SectionContainer>
-              <div>
-                <Label>First Loading:</Label>
-                <Input
-                  type="text"
-                  name="firstLoading"
-                  value={formData.firstLoading}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div>
-                <Label>First Offloading:</Label>
-                <Input
-                  type="text"
-                  name="firstOffloading"
-                  value={formData.firstOffloading}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div>
-                <Label>Second Loading (Optional):</Label>
-                <Input
-                  type="text"
-                  name="secondLoading"
-                  value={formData.secondLoading}
-                  onChange={handleInputChange}
-                />
-              </div>
-              <div>
-                <Label>Second Offloading (Optional):</Label>
-                <Input
-                  type="text"
-                  name="secondOffloading"
-                  value={formData.secondOffloading}
-                  onChange={handleInputChange}
-                />
-              </div>
-            </SectionContainer>
-
-
-            <h3>Transaction Details</h3>
-            <SectionContainer>
-              <div>
-                <Label>Customer Rate:</Label>
-                <Input
-                  type="number"
-                  name="customerRate"
-                  value={formData.customerRate}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div>
-                <Label>Customer Waiting Charges:</Label>
-                <Input
-                  type="number"
-                  name="customerWaitingCharges"
-                  value={formData.customerWaitingCharges}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div>
-                <Label>Amount Received:</Label>
-                <Input
-                  type="number"
-                  name="amountReceived"
-                  value={formData.amountReceived}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div>
-                <Label>Amount Balance:</Label>
-                <Input
-                  type="number"
-                  name="amountBalance"
-                  value={formData.amountBalance}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div>
-                <Label>Driver Rate:</Label>
-                <Input
-                  type="number"
-                  name="driverRate"
-                  value={formData.driverRate}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div>
-                <Label>Driver Waiting Charges:</Label>
-                <Input
-                  type="number"
-                  name="driverWaitingCharges"
-                  value={formData.driverWaitingCharges}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div>
-                <Label>Amount Paid:</Label>
-                <Input
-                  type="number"
-                  name="amountPaid"
-                  value={formData.amountPaid}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div>
-                <Label>Amount Balance:</Label>
-                <Input
-                  type="number"
-                  name="transactionAmountBalance"
-                  value={formData.transactionAmountBalance}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-            </SectionContainer>
-
-            <h3>Invoice Details</h3>
-            <SectionContainer>
-              <div>
-                <Label>Invoice No:</Label>
-                <Input
-                  type="text"
-                  name="invoiceNo"
-                  value={formData.invoiceNo}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-              <div>
-                <Label>Invoice Date:</Label>
-                <Input
-                  type="date"
-                  name="invoiceDate"
-                  value={formData.invoiceDate}
-                  onChange={handleInputChange}
-                  required
-                />
-              </div>
-            </SectionContainer>
-
-            <h3>Remarks</h3>
-            <SectionContainer style={{ gridTemplateColumns: '1fr' }}>
-              <div>
-                <Input
-                  type="text"
-                  name="remarks"
-                  value={formData.remarks}
-                  onChange={handleInputChange}
-                />
-              </div>
-            </SectionContainer>
-
-
-            <SubmitButtonGroup>
-              <SaveButton type="submit">Save</SaveButton>
-              <CancelButton type="button" onClick={closeModal}>Cancel</CancelButton>
-            </SubmitButtonGroup>
-          </ModalForm>
-        </Modal>
+        
 
         <ToastContainer />
       </ContentContainer>

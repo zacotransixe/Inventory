@@ -95,14 +95,25 @@ const LoginPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError('');
-
+  
     try {
       const userCredential = await signInWithEmailAndPassword(auth, email, password);
+  
+      // Save user details to localStorage
+      const userData = {
+        isLoggedIn: true,
+        userId: userCredential.user.uid,
+        email: userCredential.user.email,
+      };
+      localStorage.setItem('userData', JSON.stringify(userData));
+  
+      // Navigate to the next page
       navigate('/trips', { state: { userId: userCredential.user.uid } });
     } catch (error) {
       console.error('Error Code:', error.code);
       console.error('Error Message:', error.message);
-
+  
+      // Handle specific error codes
       switch (error.code) {
         case 'auth/invalid-email':
           setError('Invalid email format.');
@@ -121,6 +132,7 @@ const LoginPage = () => {
       }
     }
   };
+  
 
   return (
     <LoginPageContainer>

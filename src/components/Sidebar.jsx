@@ -75,7 +75,6 @@ const Welcome = styled.div`
   align-items: center;
 `;
 
-// Sidebar component
 const Sidebar = () => {
   const navigate = useNavigate();
   const location = useLocation();
@@ -83,19 +82,21 @@ const Sidebar = () => {
   const username = location.state?.username || 'User';
 
   useEffect(() => {
-    // Check if the user is logged in (use authentication logic here, if applicable)
-    const isUserLoggedIn = localStorage.getItem('isLoggedIn') === 'true';
-    setIsLoggedIn(isUserLoggedIn);
+    // Check login status from localStorage on component mount
+    const userData = JSON.parse(localStorage.getItem('userData'));
+    setIsLoggedIn(userData?.isLoggedIn || false);
   }, []);
 
   const handleLogout = () => {
-    localStorage.setItem('isLoggedIn', 'false');
+    localStorage.setItem('userData', JSON.stringify({ isLoggedIn: false }));
     setIsLoggedIn(false);
-    navigate('/login');
+    navigate('/trips'); // Redirect to login page after logout
+    window.location.reload(); // Refresh the page
+
   };
 
   const handleLogin = () => {
-    navigate('/login');
+    navigate('/login'); // Redirect to login page
   };
 
   return (
@@ -111,67 +112,59 @@ const Sidebar = () => {
           <StyledNavLink to="/">Home</StyledNavLink>
         </li>
         <li>
-  <StyledNavLink to="/trips" target="_blank" rel="noopener noreferrer">
-    Trips
-  </StyledNavLink>
-</li>
-<li>
-  <StyledNavLink to="/expenses" target="_blank" rel="noopener noreferrer">
-    Expenses
-  </StyledNavLink>
-</li>
-<li>
-  <StyledNavLink to="/reports" target="_blank" rel="noopener noreferrer">
-    Reports
-  </StyledNavLink>
-</li>
-<li>
-  <StyledNavLink to="/customers" target="_blank" rel="noopener noreferrer">
-    Customers
-  </StyledNavLink>
-</li>
-<li>
-  <StyledNavLink to="/prt" target="_blank" rel="noopener noreferrer">
-    PRT
-  </StyledNavLink>
-</li>
-<li>
-  <StyledNavLink to="/admin" target="_blank" rel="noopener noreferrer">
-    Admin
-  </StyledNavLink>
-</li>
-<li>
-  <StyledNavLink to="/about" target="_blank" rel="noopener noreferrer">
-    About
-  </StyledNavLink>
-</li>
-
-
+          <StyledNavLink to="/trips" target="_blank" rel="noopener noreferrer">
+            Trips
+          </StyledNavLink>
+        </li>
+        <li>
+          <StyledNavLink to="/expenses" target="_blank" rel="noopener noreferrer">
+            Expenses
+          </StyledNavLink>
+        </li>
+        <li>
+          <StyledNavLink to="/reports" target="_blank" rel="noopener noreferrer">
+            Reports
+          </StyledNavLink>
+        </li>
+        <li>
+          <StyledNavLink to="/customers" target="_blank" rel="noopener noreferrer">
+            Customers
+          </StyledNavLink>
+        </li>
+        <li>
+          <StyledNavLink to="/prt" target="_blank" rel="noopener noreferrer">
+            PRT
+          </StyledNavLink>
+        </li>
+        <li>
+          <StyledNavLink to="/admin" target="_blank" rel="noopener noreferrer">
+            Admin
+          </StyledNavLink>
+        </li>
+        <li>
+          <StyledNavLink to="/about" target="_blank" rel="noopener noreferrer">
+            About
+          </StyledNavLink>
+        </li>
       </NavList>
 
       {/* Welcome message and login/logout button */}
-      <Welcome>
-        {isLoggedIn ? (
-          <>
-            <span>Welcome, {username}</span>
-            <StyledNavLink
-              to="/"
-              onClick={handleLogout}
-              style={{ backgroundColor: '#d9534f', marginTop: '20px' }}
-            >
-              Logout
-            </StyledNavLink>
-          </>
-        ) : (
-          <StyledNavLink
-            to="/login"
-            onClick={handleLogin}
-            style={{ backgroundColor: '#28a745', marginTop: '20px' }}
-          >
-            Login
-          </StyledNavLink>
-        )}
-      </Welcome>
+      
+        <button
+          onClick={isLoggedIn ? handleLogout : handleLogin}
+          style={{
+            backgroundColor: isLoggedIn ? '#d9534f' : '#28a745',
+            marginTop: '20px',
+            color: '#fff',
+            border: 'none',
+            padding: '10px 20px',
+            borderRadius: '5px',
+            cursor: 'pointer',
+          }}
+        >
+          {isLoggedIn ? 'Logout' : 'Login'}
+        </button>
+      
     </SidebarContainer>
   );
 };
