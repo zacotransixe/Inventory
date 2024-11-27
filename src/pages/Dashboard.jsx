@@ -101,6 +101,7 @@ const RightSideContainer = styled.div`
 
 const TableWrapper = styled.div`
   height: 400px; /* Set a fixed height for the table */
+  max-width: 1400px; /* Set a fixed width for the table */
   overflow: auto; /* Enable both horizontal and vertical scrolling */
   border: 1px solid #ddd; /* Optional border around the table */
   margin-top: 20px;
