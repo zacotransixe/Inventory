@@ -159,25 +159,10 @@ const Customers = () => {
   }, []);
 
 
-  // Get the last customer ID and increment for the new customer
-  const generateCustomerId = async () => {
-    const customersCollection = collection(db, 'customers');
-    const q = query(customersCollection, orderBy('id', 'desc'), limit(1));
-    const lastCustomerSnapshot = await getDocs(q);
-
-    if (lastCustomerSnapshot.empty) {
-      return 'CUS001'; // If no customers exist, start with CUS001
-    } else {
-      const lastCustomerId = lastCustomerSnapshot.docs[0].data().id;
-      const numericId = parseInt(lastCustomerId.replace('CUS', '')) + 1;
-      return `CUS${String(numericId).padStart(3, '0')}`; // Generate next ID like CUS002, CUS003
-    }
-  };
+  
 
   const handleAddCustomer = async () => {
-    const newId = await generateCustomerId();
-    setNewCustomerId(newId);
-    setSelectedCustomer({ id: newId, customer: '' }); // Reset form for new customer with ID
+    setSelectedCustomer({customer: '' }); // Reset form for new customer with ID
     setModalOpen(true);
   };
 
@@ -196,29 +181,11 @@ const Customers = () => {
     try {
       setLoading(true);
 
-      if (selectedCustomer && selectedCustomer.id && customersData.some(customer => customer.id === selectedCustomer.id)) {
-        // If the customer already exists, update it
-        const customerInFirestore = customersData.find(customer => customer.id === selectedCustomer.id);
-        const customerRef = doc(db, 'customers', customerInFirestore.firestoreId); // Use Firestore document ID
-
-        await updateDoc(customerRef, {
-          customer: customerName,
-          id: selectedCustomer.id, // Keep the same custom ID like 'CUS002'
-          created: selectedCustomer.created, // Preserve original creation date
-          updated: new Date().toISOString(), // Add updated timestamp
-        });
-
-        toast.success('Customer updated successfully!');
-      } else {
+      {
         // For new customers
-        const newId = newCustomerId || (await generateCustomerId()); // Generate new customer ID
-        const customerRef = doc(db, 'customers', newId); // Use this for creating a new document
-
-        await setDoc(customerRef, {
-          id: newId,
-          customer: customerName,
-          created: new Date().toISOString(), // Set created date
-        });
+        const newCustomer = { customer: customerName,created: new Date().toISOString(), // Set created date
+        };
+        await addDoc(collection(db, 'customers'), newCustomer);
 
         toast.success('Customer added successfully!');
       }
@@ -274,7 +241,6 @@ const Customers = () => {
           <StyledTable>
             <StyledTableHead>
               <StyledTableRow>
-                <StyledTableHeader>ID</StyledTableHeader>
                 <StyledTableHeader>Customer</StyledTableHeader>
                 <StyledTableHeader>Created</StyledTableHeader>
                 <StyledTableHeader>Actions</StyledTableHeader>
@@ -289,14 +255,12 @@ const Customers = () => {
                 </tr>
               ) : (
                 customersData.map((customer) => (
-                  <StyledTableRow key={customer.id}>
-                    <StyledTableCell>{customer.id}</StyledTableCell>
+                  <StyledTableRow key={customer.customer}>
                     <StyledTableCell>{customer.customer}</StyledTableCell>
                     <StyledTableCell>{customer.created}</StyledTableCell>
                     <StyledTableCell>
                       <ActionButtons>
-                        <EditButton onClick={() => handleEditCustomer(customer)}>Edit</EditButton>
-                        <DeleteButton onClick={() => handleDeleteCustomer(customer.firestoreId)}>Delete</DeleteButton>
+                        <DeleteButton onClick={() => handleDeleteCustomer(customer.customer)}>Delete</DeleteButton>
                       </ActionButtons>
                     </StyledTableCell>
                   </StyledTableRow>

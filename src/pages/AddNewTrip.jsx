@@ -1,11 +1,13 @@
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { db, auth } from '../firebase';
-import { collection, addDoc } from 'firebase/firestore';
+import { collection, addDoc, getDocs } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Sidebar from '../components/Sidebar';
+import Modal from 'react-modal';
+import { BsWindowSidebar } from 'react-icons/bs';
 
 
 // Styled Components
@@ -22,6 +24,26 @@ const ContentContainer = styled.div`
   padding: 2rem;
   max-width: 1200px;
   margin: auto;
+`;
+
+const ModalForm = styled.form`
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+`;
+
+const ModalInput = styled.input`
+  padding: 0.5rem;
+  font-size: 1rem;
+  border: 1px solid #ccc;
+  border-radius: 5px;
+  outline: none;
+`;
+
+const ModalButtons = styled.div`
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
 `;
 
 const InputWrapper = styled.div`
@@ -142,6 +164,10 @@ const AddNewTrip = () => {
   const [loggedIn, setLoggedIn] = useState(false);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [customers, setCustomers] = useState([]);
+  const [newCustomerName, setNewCustomerName] = useState('');
+  const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
+  const [modalLoading, setModalLoading] = useState(false); // Loading state for the modal
 
 
   const initialFormData = {
@@ -168,9 +194,12 @@ const AddNewTrip = () => {
     invoiceNo: '',
     invoiceDate: '',
     remarks: '',
+    customerName: '',
+
   };
 
   const [formData, setFormData] = useState(initialFormData);
+
 
   // Check if user is logged in
   useEffect(() => {
@@ -179,6 +208,25 @@ const AddNewTrip = () => {
       console.log('User logged in:', user);
     });
     return () => unsubscribe();
+  }, []);
+
+  useEffect(() => {
+    // Fetch customers from Firebase
+    const fetchCustomers = async () => {
+      try {
+        const customersSnapshot = await getDocs(collection(db, 'customers'));
+        const customerList = customersSnapshot.docs.map((doc) => ({
+          id: doc.id,
+          name: doc.data().customer,
+        }));
+        setCustomers(customerList);
+      } catch (error) {
+        console.error('Error fetching customers:', error.message);
+        toast.error('Error loading customers: ' + error.message);
+      }
+    };
+
+    fetchCustomers();
   }, []);
 
   const closeModal = () => setIsModalOpen(false);
@@ -226,6 +274,27 @@ const AddNewTrip = () => {
     } finally {
       setLoading(false);
       console.log('Loading state reset to false.');
+    }
+  };
+
+  const handleAddCustomer = async (e) => {
+    e.preventDefault();
+    setModalLoading(true); // Start loader
+
+    try {
+      const newCustomer = { customer: newCustomerName,created: new Date().toISOString(), // Set created date
+      };
+      await addDoc(collection(db, 'customers'), newCustomer);
+      setCustomers((prev) => [...prev, { created: Date.now(), customer: newCustomerName }]);
+      toast.success('Customer added successfully!');
+      setNewCustomerName('');
+      setIsCustomerModalOpen(false);
+      window.location.reload();
+    } catch (error) {
+      console.error('Error adding customer:', error.message);
+      toast.error('Failed to add customer: ' + error.message);
+    }finally {
+      setModalLoading(false); // Stop loader
     }
   };
 
@@ -299,14 +368,34 @@ const AddNewTrip = () => {
   <h3>Customer Info</h3>
   <SectionContainer>
   <InputWrapper>
-      <Label>Customer Name:</Label>
-      <Input
-        type="text"
-        name="customerName"
-        value={formData.customerName}
-        onChange={handleInputChange}
-        
-      />
+  <Label>Customer Name:</Label>
+              <Select
+                name="customerName"
+                value={formData.customerName}
+                onChange={handleInputChange}
+              >
+                <option value="">Select Customer</option>
+                {customers.map((customer) => (
+                  <option key={customer.id} value={customer.name}>
+                    {customer.name}
+                  </option>
+                ))}
+              </Select>
+              <button
+                type="button"
+                onClick={() => setIsCustomerModalOpen(true)}
+                style={{
+                  marginTop: '10px',
+                  padding: '5px 10px',
+                  backgroundColor: '#007bff',
+                  color: '#fff',
+                  border: 'none',
+                  borderRadius: '5px',
+                  cursor: 'pointer',
+                }}
+              >
+                Add Customer
+              </button>
     </InputWrapper>
     <InputWrapper>
       <Label>C/O:</Label>
@@ -446,6 +535,30 @@ const AddNewTrip = () => {
     </InputWrapper>
   </SectionContainer>
 
+  <h3>Invoice Details</h3>
+  <SectionContainer>
+    <InputWrapper>
+      <Label>Invoice No:</Label>
+      <Input
+        type="number"
+        name="invoiceNo"
+        value={formData.invoiceNo}
+        onChange={handleInputChange}
+        required
+      />
+    </InputWrapper>
+    <InputWrapper>
+      <Label>Invoice Date:</Label>
+      <Input
+        type="date"
+        name="invoiceDate"
+        value={formData.invoiceDate}
+        onChange={handleInputChange}
+        required
+      />
+    </InputWrapper>
+    </SectionContainer>
+
   <SubmitButtonGroup>
               <SaveButton type="submit" disabled={loading}>
                 {loading ? 'Saving...' : 'Save'}
@@ -457,6 +570,50 @@ const AddNewTrip = () => {
 </form>
    )}
           
+
+{/* Add Customer Modal */}
+<Modal
+          isOpen={isCustomerModalOpen}
+          onRequestClose={() => setIsCustomerModalOpen(false)}
+          contentLabel="Add New Customer"
+          ariaHideApp={false}
+          style={{
+            overlay: { backgroundColor: 'rgba(0, 0, 0, 0.6)' },
+            content: { padding: '20px', borderRadius: '10px', maxWidth: '400px', margin: 'auto' },
+          }}
+        >
+          <h2>Add New Customer</h2>
+          <ModalForm onSubmit={handleAddCustomer}>
+            <ModalInput
+              type="text"
+              value={newCustomerName}
+              onChange={(e) => setNewCustomerName(e.target.value)}
+              placeholder="Customer Name"
+              required
+            />
+            <ModalButtons>
+              <button type="submit" style={{ backgroundColor: '#28a745', color: '#fff', padding: '10px', border: 'none', borderRadius: '5px',                  cursor: 'pointer', // Hand cursor
+ }}>
+                Save
+              </button>
+              <button
+                type="button"
+                onClick={() => setIsCustomerModalOpen(false)}
+                style={{
+                  backgroundColor: '#dc3545',
+                  color: '#fff',
+                  padding: '10px',
+                  border: 'none',
+                  borderRadius: '5px',
+                  cursor: 'pointer', // Hand cursor
+
+                }}
+              >
+                Cancel
+              </button>
+            </ModalButtons>
+          </ModalForm>
+        </Modal>
 
         <ToastContainer />
       </ContentContainer>

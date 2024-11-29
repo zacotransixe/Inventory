@@ -21,6 +21,8 @@ const DashboardContainer = styled.div`
 `;
 
 const ContentContainer = styled.div`
+width: 90%;
+max-width:100%;
   flex-grow: 1;
   padding: 2rem;
   display: flex;
@@ -100,33 +102,38 @@ const RightSideContainer = styled.div`
 `;
 
 const TableWrapper = styled.div`
-  height: 400px; /* Set a fixed height for the table */
-  max-width: 1400px; /* Set a fixed width for the table */
-  overflow: auto; /* Enable both horizontal and vertical scrolling */
-  border: 1px solid #ddd; /* Optional border around the table */
+  width: 100%; /* Make the table wrapper take full width */
+    max-width: 100%; /* Prevent the wrapper from exceeding the screen width */
+
+  overflow-x: auto; /* Add horizontal scroll if table exceeds screen width */
   margin-top: 20px;
-  margin-left: auto; /* Center align the table */
+  margin-left: auto;
   margin-right: auto;
+    border: 1px solid #ddd; /* Optional border for better visibility */
+  border-radius: 8px; /* Optional rounded corners */
 `;
 
 const StyledTable = styled(Table)`
+  width: 100%; /* Ensure the table fits within its container */
+
   border-collapse: collapse;
-  width: 100%;
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
   background-color: white;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  
 `;
 
 const StyledTableHead = styled(TableHead)`
   background-color: #343a40;
   color: #fff;
+
   th {
     padding: 12px;
     text-align: left;
     color: #fff;
     font-weight: bold;
-    position: sticky; /* Make header sticky */
-    top: 0; /* Stick the header to the top of the scrollable container */
-    z-index: 1; /* Ensure header stays above the rows */
+    position: sticky;
+    top: 0;
+    z-index: 1;
   }
 `;
 
@@ -145,9 +152,10 @@ const StyledTableBody = styled(TableBody)`
     text-align: left;
     white-space: nowrap; /* Prevent text wrapping */
     overflow: hidden; /* Hide overflowing text */
-    text-overflow: ellipsis; /* Add ellipsis to overflowing text */
+    text-overflow: ellipsis; /* Add ellipsis for overflowing text */
   }
 `;
+
 
 const PaginationControls = styled.div`
   display: flex;
@@ -457,6 +465,8 @@ const Dashboard = () => {
             )}
           </ButtonGroup>
         </SearchBar>
+
+
 
         <RightSideContainer>
           {loading ? (
