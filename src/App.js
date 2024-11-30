@@ -11,6 +11,9 @@ import Admin from './pages/Admin'; // Import Admin page
 import About from './pages/About'; // Import About page
 import Home from './pages/Home';
 import AddNewTrip from './pages/AddNewTrip';
+import AddNewExpense from './pages/AddNewExpense';
+import AddNewCustomer from './pages/AddNewCustomer';
+
 
 const App = () => {
   return (
@@ -20,6 +23,8 @@ const App = () => {
         <Route path="/login" element={<Login />} />
         <Route path="/trips" element={<Dashboard />} />
         <Route path="/addnewtrip" element={<AddNewTrip />} />
+        <Route path="/add-new-expense" element={<AddNewExpense />} />
+        <Route path="/add-new-customer" element={<AddNewCustomer />} />
 
         <Route path="/expenses" element={<Expenses />} />
         <Route path="/reports" element={<Reports />} />

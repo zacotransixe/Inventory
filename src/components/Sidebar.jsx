@@ -131,7 +131,7 @@ const Sidebar = () => {
             Customers
           </StyledNavLink>
         </li>
-        <li>
+        {/* <li>
           <StyledNavLink to="/prt" target="_blank" rel="noopener noreferrer">
             PRT
           </StyledNavLink>
@@ -145,26 +145,26 @@ const Sidebar = () => {
           <StyledNavLink to="/about" target="_blank" rel="noopener noreferrer">
             About
           </StyledNavLink>
-        </li>
+        </li> */}
       </NavList>
 
       {/* Welcome message and login/logout button */}
-      
-        <button
-          onClick={isLoggedIn ? handleLogout : handleLogin}
-          style={{
-            backgroundColor: isLoggedIn ? '#d9534f' : '#28a745',
-            marginTop: '20px',
-            color: '#fff',
-            border: 'none',
-            padding: '10px 20px',
-            borderRadius: '5px',
-            cursor: 'pointer',
-          }}
-        >
-          {isLoggedIn ? 'Logout' : 'Login'}
-        </button>
-      
+
+      <button
+        onClick={isLoggedIn ? handleLogout : handleLogin}
+        style={{
+          backgroundColor: isLoggedIn ? '#d9534f' : '#28a745',
+          marginTop: '20px',
+          color: '#fff',
+          border: 'none',
+          padding: '10px 20px',
+          borderRadius: '5px',
+          cursor: 'pointer',
+        }}
+      >
+        {isLoggedIn ? 'Logout' : 'Login'}
+      </button>
+
     </SidebarContainer>
   );
 };

@@ -1,16 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import Sidebar from '../components/Sidebar';
-import Modal from '../components/CustomerModal'; // Import the CustomerModal component
-import { db } from '../firebase'; // Import Firebase config
-import { collection, getDocs, addDoc, updateDoc, deleteDoc, doc, orderBy, query, limit, setDoc } from 'firebase/firestore';
+import { db } from '../firebase';
+import { collection, getDocs, deleteDoc, doc } from 'firebase/firestore';
 import { toast, ToastContainer } from 'react-toastify';
-import 'react-toastify/dist/ReactToastify.css'; // Import toastify styles
+import 'react-toastify/dist/ReactToastify.css';
 
 const CustomersContainer = styled.div`
   display: flex;
   min-height: 100vh;
-  background-color: #f9f9f9;
+  background-color: #f4f6f9;
 `;
 
 const ContentContainer = styled.div`
@@ -21,59 +19,56 @@ const ContentContainer = styled.div`
   gap: 20px;
 `;
 
-const ButtonContainer = styled.div`
+const Header = styled.div`
   display: flex;
-  justify-content: flex-start;
-  margin-bottom: 20px;
+  justify-content: space-between;
+  align-items: center;
+  background-color: #fff;
+  padding: 1rem 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+`;
+
+const Title = styled.h1`
+  font-size: 1.5rem;
+  font-weight: bold;
+  color: #333;
+  margin: 0;
 `;
 
 const StylishButton = styled.button`
   padding: 0.75rem 1.5rem;
-  background-color: #3498db; /* Primary blue color */
+  background-color: #3498db; /* Primary blue */
   color: white;
-  font-size: 16px;
+  font-size: 1rem;
+  font-weight: bold;
   border: none;
-  border-radius: 50px; /* Rounded edges */
+  border-radius: 8px;
   cursor: pointer;
-  transition: background-color 0.3s ease, box-shadow 0.3s ease;
+  transition: background-color 0.3s ease, transform 0.2s ease;
 
   &:hover {
     background-color: #2980b9; /* Darker blue on hover */
-    box-shadow: 0px 4px 15px rgba(0, 0, 0, 0.2); /* Add a shadow on hover */
+    transform: translateY(-3px);
   }
 
   &:focus {
     outline: none;
-    box-shadow: 0px 0px 5px 2px rgba(52, 152, 219, 0.6); /* Focus ring */
-  }
-`;
-
-const EditButton = styled(StylishButton)`
-  background-color: #f39c12; /* Yellow for edit */
-  
-  &:hover {
-    background-color: #e67e22; /* Darker yellow on hover */
-  }
-`;
-
-const DeleteButton = styled(StylishButton)`
-  background-color: #e74c3c; /* Red for delete */
-  
-  &:hover {
-    background-color: #c0392b; /* Darker red on hover */
+    box-shadow: 0 0 4px #3498db;
   }
 `;
 
 const TableContainer = styled.div`
-  width: 100%;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   overflow-x: auto;
 `;
 
 const StyledTable = styled.table`
   width: 100%;
   border-collapse: collapse;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  border-radius: 8px;
+  border-radius: 10px;
   overflow: hidden;
 `;
 
@@ -82,13 +77,9 @@ const StyledTableHead = styled.thead`
   color: #fff;
 `;
 
-const StyledTableBody = styled.tbody`
-  background-color: #fff;
-`;
-
 const StyledTableRow = styled.tr`
   &:nth-child(even) {
-    background-color: #f2f2f2;
+    background-color: #f9f9f9;
   }
 
   &:hover {
@@ -100,15 +91,16 @@ const StyledTableHeader = styled.th`
   padding: 1rem;
   text-align: left;
   font-weight: 600;
-  font-size: 14px;
-  border-bottom: 2px solid #ddd;
+  font-size: 1rem;
+  text-transform: uppercase;
 `;
 
 const StyledTableCell = styled.td`
   padding: 0.75rem;
-  border-bottom: 1px solid #ddd;
-  font-size: 14px;
+  text-align: left;
+  font-size: 1rem;
   color: #333;
+  border-bottom: 1px solid #ddd;
 `;
 
 const ActionButtons = styled.div`
@@ -116,24 +108,56 @@ const ActionButtons = styled.div`
   gap: 10px;
 `;
 
+const EditButton = styled(StylishButton)`
+  background-color: #f39c12;
+
+  &:hover {
+    background-color: #e67e22;
+  }
+`;
+
+const DeleteButton = styled(StylishButton)`
+  background-color: #e74c3c;
+
+  &:hover {
+    background-color: #c0392b;
+  }
+`;
+
+const LoaderContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: 2rem;
+`;
+
 const Loader = styled.div`
   border: 4px solid #f3f3f3;
   border-top: 4px solid #3498db;
   border-radius: 50%;
-  width: 30px;
-  height: 30px;
+  width: 40px;
+  height: 40px;
   animation: spin 1s linear infinite;
+
   @keyframes spin {
-    0% { transform: rotate(0deg); }
-    100% { transform: rotate(360deg); }
+    0% {
+      transform: rotate(0deg);
+    }
+    100% {
+      transform: rotate(360deg);
+    }
   }
 `;
 
+const NoResults = styled.div`
+  text-align: center;
+  font-size: 1.2rem;
+  color: #888;
+  padding: 2rem;
+`;
+
 const Customers = () => {
-  const [modalOpen, setModalOpen] = useState(false);
-  const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [customersData, setCustomersData] = useState([]);
-  const [newCustomerId, setNewCustomerId] = useState('');
   const [loading, setLoading] = useState(false);
 
   // Fetch customers from Firestore
@@ -143,9 +167,9 @@ const Customers = () => {
       try {
         const customersCollection = collection(db, 'customers');
         const customerSnapshot = await getDocs(customersCollection);
-        const customersList = customerSnapshot.docs.map(doc => ({
-          firestoreId: doc.id, // Save the Firestore document ID
-          ...doc.data(), // Spread the rest of the customer data (including id: 'CUS002')
+        const customersList = customerSnapshot.docs.map((doc) => ({
+          firestoreId: doc.id,
+          ...doc.data(),
         }));
         setCustomersData(customersList);
         setLoading(false);
@@ -158,58 +182,32 @@ const Customers = () => {
     fetchCustomers();
   }, []);
 
-
-  
-
-  const handleAddCustomer = async () => {
-    setSelectedCustomer({customer: '' }); // Reset form for new customer with ID
-    setModalOpen(true);
+  const handleAddCustomer = () => {
+    window.open('/add-new-customer', '_blank');
   };
 
   const handleEditCustomer = (customer) => {
-    setSelectedCustomer(customer); // Load the selected customer's data
-    setModalOpen(true);
+    const queryParams = new URLSearchParams({
+      id: customer.firestoreId,
+      customer: customer.customer,
+      created: customer.created,
+    }).toString();
+
+    window.open(`/add-new-customer?${queryParams}`, '_blank');
   };
 
-  // Handle modal close
-  const handleModalClose = () => {
-    setModalOpen(false);
-  };
-
-  // Handle saving or updating customer to Firestore
-  const handleSaveCustomer = async (customerName) => {
-    try {
-      setLoading(true);
-
-      {
-        // For new customers
-        const newCustomer = { customer: customerName,created: new Date().toISOString(), // Set created date
-        };
-        await addDoc(collection(db, 'customers'), newCustomer);
-
-        toast.success('Customer added successfully!');
-      }
-
-      handleModalClose(); // Close modal after save
-      refreshCustomersData(); // Refresh customer list
-      setLoading(false);
-    } catch (error) {
-      setLoading(false);
-      toast.error('Error saving customer: ' + error.message);
-    }
-  };
-
-
-  // Delete a customer from Firestore
-  // Delete a customer from Firestore
   const handleDeleteCustomer = async (firestoreId) => {
     if (window.confirm('Are you sure you want to delete this customer?')) {
       try {
         setLoading(true);
-        const customerRef = doc(db, 'customers', firestoreId); // Use Firestore document ID
+        const customerRef = doc(db, 'customers', firestoreId);
         await deleteDoc(customerRef);
         toast.success('Customer deleted successfully!');
-        refreshCustomersData();
+        // Refresh customers list
+        const updatedCustomers = customersData.filter(
+          (customer) => customer.firestoreId !== firestoreId
+        );
+        setCustomersData(updatedCustomers);
         setLoading(false);
       } catch (error) {
         setLoading(false);
@@ -218,68 +216,55 @@ const Customers = () => {
     }
   };
 
-
-  // Refresh the list of customers
-  const refreshCustomersData = async () => {
-    const customersCollection = collection(db, 'customers');
-    const customerSnapshot = await getDocs(customersCollection);
-    const customersList = customerSnapshot.docs.map(doc => ({
-      id: doc.id,
-      ...doc.data(),
-    }));
-    setCustomersData(customersList);
-  };
-
   return (
     <CustomersContainer>
       <ContentContainer>
-        <ButtonContainer>
+        <Header>
+          <Title>Customers</Title>
           <StylishButton onClick={handleAddCustomer}>Add Customer</StylishButton>
-        </ButtonContainer>
+        </Header>
 
         <TableContainer>
-          <StyledTable>
-            <StyledTableHead>
-              <StyledTableRow>
-                <StyledTableHeader>Customer</StyledTableHeader>
-                <StyledTableHeader>Created</StyledTableHeader>
-                <StyledTableHeader>Actions</StyledTableHeader>
-              </StyledTableRow>
-            </StyledTableHead>
-            <StyledTableBody>
-              {loading ? (
-                <tr>
-                  <td colSpan="4" style={{ textAlign: 'center' }}>
-                    <Loader />
-                  </td>
-                </tr>
-              ) : (
-                customersData.map((customer) => (
-                  <StyledTableRow key={customer.customer}>
+          {loading ? (
+            <LoaderContainer>
+              <Loader />
+            </LoaderContainer>
+          ) : customersData.length === 0 ? (
+            <NoResults>No customers found</NoResults>
+          ) : (
+            <StyledTable>
+              <StyledTableHead>
+                <StyledTableRow>
+                  <StyledTableHeader>Customer</StyledTableHeader>
+                  <StyledTableHeader>Created</StyledTableHeader>
+                  <StyledTableHeader>Actions</StyledTableHeader>
+                </StyledTableRow>
+              </StyledTableHead>
+              <tbody>
+                {customersData.map((customer) => (
+                  <StyledTableRow key={customer.firestoreId}>
                     <StyledTableCell>{customer.customer}</StyledTableCell>
                     <StyledTableCell>{customer.created}</StyledTableCell>
                     <StyledTableCell>
                       <ActionButtons>
-                        <DeleteButton onClick={() => handleDeleteCustomer(customer.customer)}>Delete</DeleteButton>
+                        <EditButton onClick={() => handleEditCustomer(customer)}>
+                          Edit
+                        </EditButton>
+                        <DeleteButton
+                          onClick={() => handleDeleteCustomer(customer.firestoreId)}
+                        >
+                          Delete
+                        </DeleteButton>
                       </ActionButtons>
                     </StyledTableCell>
                   </StyledTableRow>
-                ))
-              )}
-            </StyledTableBody>
-          </StyledTable>
+                ))}
+              </tbody>
+            </StyledTable>
+          )}
         </TableContainer>
-
-        {/* Modal for Adding or Editing Customer */}
-        {modalOpen && (
-          <Modal
-            customer={selectedCustomer}
-            onClose={handleModalClose}
-            onSave={handleSaveCustomer} // Pass save function to modal
-          />
-        )}
       </ContentContainer>
-      <ToastContainer /> {/* Toast notification container */}
+      <ToastContainer />
     </CustomersContainer>
   );
 };
