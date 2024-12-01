@@ -108,7 +108,7 @@ const LoginPage = () => {
       localStorage.setItem('userData', JSON.stringify(userData));
 
       // Navigate to the next page
-      navigate('/', { state: { userId: userCredential.user.uid } });
+      navigate('/home', { state: { userId: userCredential.user.uid } });
     } catch (error) {
       console.error('Error Code:', error.code);
       console.error('Error Message:', error.message);
