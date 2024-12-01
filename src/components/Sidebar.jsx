@@ -90,7 +90,7 @@ const Sidebar = () => {
   const handleLogout = () => {
     localStorage.setItem('userData', JSON.stringify({ isLoggedIn: false }));
     setIsLoggedIn(false);
-    navigate('/trips'); // Redirect to login page after logout
+    navigate('/'); // Redirect to login page after logout
     window.location.reload(); // Refresh the page
 
   };
