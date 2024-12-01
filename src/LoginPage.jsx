@@ -86,7 +86,7 @@ const LoginPage = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (username === 'admin' && password === 'admin') {
-      navigate('/trips', { state: { username } });  // Updated navigation
+      navigate('/', { state: { username } });  // Updated navigation
     } else {
       alert('Invalid credentials');
     }
