@@ -268,17 +268,12 @@ const Reports = () => {
 
     const summary = {};
 
-
-
     // Process trips
     trips.forEach((trip) => {
       const tripDate = new Date(trip.tripDate);
-      const monthYear = `${tripDate.getFullYear()}-${String(tripDate.getMonth() + 1).padStart(2, '0')}`;
-
       const year = tripDate.getFullYear();
       const month = String(tripDate.getMonth() + 1).padStart(2, '0');
       const key = `${year}-${month}`;
-
 
       if (!summary[key]) {
         summary[key] = {
@@ -292,28 +287,40 @@ const Reports = () => {
           driverWait: 0,
           driverTotal: 0,
           expenses: 0,
+          deduction: 0,
+          profit: 0, // Initialize profit
+          altaf: 0,
+          mansoor: 0,
         };
       }
 
-      summary[monthYear].trips += 1; // Increment trip count
-      summary[monthYear].customerRate += parseFloat(trip.customerRate || 0); // Add customer rate
-      summary[monthYear].customerWait += parseFloat(trip.customerWaitingCharges || 0); // Add customer waiting charges
-      summary[monthYear].driverRate += parseFloat(trip.driverRate || 0); // Add driver rate
-      summary[monthYear].driverWait += parseFloat(trip.driverWaitingCharges || 0); // Add driver waiting charges
+      summary[key].trips += 1; // Increment trip count
+      summary[key].customerRate += parseFloat(trip.customerRate || 0); // Add customer rate
+      summary[key].customerWait += parseFloat(trip.customerWaitingCharges || 0); // Add customer waiting charges
+      summary[key].driverRate += parseFloat(trip.driverRate || 0); // Add driver rate
+      summary[key].driverWait += parseFloat(trip.driverWaitingCharges || 0); // Add driver waiting charges
 
       // Calculate totals
-      summary[monthYear].customerTotal = summary[monthYear].customerRate + summary[monthYear].customerWait;
-      summary[monthYear].driverTotal = summary[monthYear].driverRate + summary[monthYear].driverWait;
+      summary[key].customerTotal = summary[key].customerRate + summary[key].customerWait;
+      summary[key].driverTotal = summary[key].driverRate + summary[key].driverWait;
+
+      // Calculate deduction (3%)
+      summary[key].deduction = Number(
+        (summary[key].customerTotal - summary[key].driverTotal) * 0.03
+      );
     });
 
     // Process expenses
     expenses.forEach((expense) => {
       const expenseDate = new Date(expense.date);
-      const monthYear = `${expenseDate.getFullYear()}-${String(expenseDate.getMonth() + 1).padStart(2, '0')}`;
+      const year = expenseDate.getFullYear();
+      const month = String(expenseDate.getMonth() + 1).padStart(2, '0');
+      const key = `${year}-${month}`;
 
-      if (!summary[monthYear]) {
-        summary[monthYear] = {
-          month: monthYear,
+      if (!summary[key]) {
+        summary[key] = {
+          year, // Add year as a separate field
+          month, // Add month as a separate field
           trips: 0,
           customerRate: 0,
           customerWait: 0,
@@ -322,15 +329,27 @@ const Reports = () => {
           driverWait: 0,
           driverTotal: 0,
           expenses: 0,
+          deduction: 0,
+          profit: 0, // Initialize profit
         };
       }
 
-      summary[monthYear].expenses += parseFloat(expense.amount || 0); // Add expense amount
+      summary[key].expenses += parseFloat(expense.amount || 0); // Add expense amount
+    });
+
+    // Calculate profit
+    Object.keys(summary).forEach((key) => {
+      const { customerTotal, driverTotal, expenses, deduction } = summary[key];
+      summary[key].profit = customerTotal - driverTotal - expenses - deduction;
+      // Split profit
+      summary[key].altaf = summary[key].profit * 0.5;
+      summary[key].mansoor = summary[key].profit * 0.5;
     });
 
     // Convert the summary object into an array
     return Object.values(summary).sort((a, b) => new Date(a.month) - new Date(b.month));
   };
+
 
 
   const generateCustomerDriverSummary = (trips) => {
@@ -510,8 +529,7 @@ const Reports = () => {
                     <th>Driver Wait</th>
                     <th>Driver Total</th>
                     <th>Expenses</th>
-                    <th>Zakat</th>
-                    <th>Deduction</th>
+                    <th>Deduction (3%)</th>
                     <th>Profit</th>
                     <th>Altaf</th>
                     <th>Mansoor</th>
@@ -530,6 +548,11 @@ const Reports = () => {
                       <td>{(row.driverWait || 0).toFixed(2)}</td>
                       <td>{(row.driverTotal || 0).toFixed(2)}</td>
                       <td>{(row.expenses || 0).toFixed(2)}</td>
+                      <td>{(row.deduction || 0).toFixed(2)}</td>
+                      <td>{(row.profit || 0).toFixed(2)}</td>
+                      <td>{(row.altaf || 0).toFixed(2)}</td>
+                      <td>{(row.mansoor || 0).toFixed(2)}</td>
+
                     </tr>
                   ))}
                 </tbody>
