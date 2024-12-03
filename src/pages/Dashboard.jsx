@@ -1,17 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
 import { FaSearch, FaFileExport, FaPlus, FaTimes } from 'react-icons/fa';
-import Sidebar from '../components/Sidebar';
 import Button from '../components/Button';
-import Modal from 'react-modal';
 import { db, auth } from '../firebase';
-import { onAuthStateChanged } from 'firebase/auth';
 import { collection, query, where, getDocs, addDoc, doc, setDoc } from 'firebase/firestore';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Papa from 'papaparse';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
-import { Timestamp } from 'firebase/firestore';
+import { Timestamp, deleteDoc } from 'firebase/firestore';
 
 // Styled Components
 const DashboardContainer = styled.div`
@@ -31,7 +28,6 @@ max-width:100%;
   margin: auto;
   margin-left: 20px; /* Add space between the sidebar and content */
 `;
-
 
 const SearchBar = styled.div`
   display: grid;
@@ -66,24 +62,6 @@ const InputWrapper = styled.div`
 const InputLabel = styled.label`
   font-weight: bold;
   margin-bottom: 5px;
-`;
-
-const Select = styled.select`
-  padding: 0.5rem;
-  font-size: 14px;
-  border: 1px solid #ccc;
-  border-radius: 5px;
-  outline: none;
-  width: 100%;
-  background-color: #fff;
-  &:focus {
-    border-color: #007bff;
-  }
-`;
-
-const ModalForm = styled.form`
-  display: flex;
-  flex-direction: column;
 `;
 
 const ButtonGroup = styled.div`
@@ -156,7 +134,6 @@ const StyledTableBody = styled(TableBody)`
   }
 `;
 
-
 const PaginationControls = styled.div`
   display: flex;
   justify-content: space-between;
@@ -190,70 +167,6 @@ const Loader = styled.div`
     0% { transform: rotate(0deg); }
     100% { transform: rotate(360deg); }
   }
-`;
-
-const SaveButton = styled.button`
-  padding: 10px 20px;
-  background-color: #28a745;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-`;
-
-const CancelButton = styled.button`
-  padding: 10px 20px;
-  background-color: #dc3545;
-  color: white;
-  border: none;
-  border-radius: 5px;
-  cursor: pointer;
-`;
-
-const SectionContainer = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 30px;
-  margin-bottom: 20px;
-`;
-
-const Label = styled.label`
-  font-weight: bold;
-  margin-bottom: 5px;
-`;
-
-const SubmitButtonGroup = styled.div`
-  display: flex;
-  justify-content: flex-end;
-  gap: 10px;
-`;
-
-const FormLabel = styled.label`
-  font-weight: bold;
-  margin-bottom: 5px;
-`;
-
-const CloseButton = styled.button`
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: none;
-  border: none;
-  color: #333;
-  font-size: 18px;
-  cursor: pointer;
-
-  &:hover {
-    color: #dc3545;
-  }
-`;
-
-const SidebarContainer = styled.div`
-  width: 250px; /* Set a fixed width for the sidebar */
-  flex-shrink: 0; /* Prevent the sidebar from shrinking */
-  background-color: #343a40; /* Example background color */
-  color: #fff;
-  height: 100vh; /* Full viewport height */
 `;
 
 
@@ -324,49 +237,9 @@ const Dashboard = () => {
     setLoggedIn(userData?.isLoggedIn || false);
   }, []);
 
-  // const openModal = () => {
-  //   setFormData(initialFormData); // Clear all fields by resetting to initial state
-  //   setIsModalOpen(true);
-  //};
   const openNewTab = () => {
     window.open('/addnewtrip', '_blank');
   };
-  const closeModal = () => setIsModalOpen(false);
-
-  const handleInputChange = (e) => {
-    const { name, value } = e.target;
-    setFormData((prevData) => ({ ...prevData, [name]: value }));
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    try {
-      // Add form data to Firebase with a unique ID
-      const docRef = await addDoc(collection(db, 'trips'), {
-        ...formData,
-        created: new Date().toISOString(), // Record creation date
-      });
-
-      // Log the unique document ID (can be removed if not needed)
-      console.log("Document written with ID: ", docRef.id);
-
-      // Display a success message
-      toast.success('Trip data saved successfully!');
-
-      // Reset form fields
-      setFormData(initialFormData);
-
-      // Close modal after saving
-      closeModal();
-    } catch (error) {
-      // Display an error message if saving fails
-      setLoading(false);
-      toast.error('Error saving trip data: ' + error.message);
-    }
-    setLoading(false);
-  };
-
 
   const handleSearchInputChange = (e) => {
     const { name, value } = e.target;
@@ -375,7 +248,7 @@ const Dashboard = () => {
 
   const handleSearchSubmit = async () => {
     setLoading(true);
-  
+
     try {
       // Check and format dates if necessary
       const formatDate = (date) => {
@@ -392,28 +265,28 @@ const Dashboard = () => {
         }
         return date;
       };
-  
+
       const fromDate = searchData.fromDate ? formatDate(searchData.fromDate) : null;
       const toDate = searchData.toDate ? formatDate(searchData.toDate) : null;
-  
+
       console.log('Formatted From Date:', fromDate);
       console.log('Formatted To Date:', toDate);
-  
+
       // Build the Firestore query
       const searchQuery = query(
         collection(db, 'trips'),
         ...(fromDate ? [where('tripDate', '>=', fromDate)] : []),
         ...(toDate ? [where('tripDate', '<=', toDate)] : [])
       );
-  
+
       const querySnapshot = await getDocs(searchQuery);
-  
+
       // Process results
       const results = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
       }));
-  
+
       if (results.length === 0) {
         toast.info('No records found for the specified date range.');
       } else {
@@ -425,8 +298,48 @@ const Dashboard = () => {
       setLoading(false);
     }
   };
-  
-  
+
+  // Calculate the paginated data
+  const indexOfLastRecord = currentPage * recordsPerPage;
+  const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
+  const currentRecords = searchResults.slice(indexOfFirstRecord, indexOfLastRecord);
+  const totalPages = Math.ceil(searchResults.length / recordsPerPage);
+
+  const handleNextPage = () => {
+    if (currentPage < totalPages) {
+      setCurrentPage((prevPage) => prevPage + 1);
+    }
+  };
+
+  const handlePreviousPage = () => {
+    if (currentPage > 1) {
+      setCurrentPage((prevPage) => prevPage - 1);
+    }
+  };
+
+  const handleEdit = (rowData) => {
+    // Pass the data to AddNewTrip page using URL parameters
+    const queryParams = new URLSearchParams(rowData).toString();
+    window.open(`/addnewtrip?${queryParams}`, '_blank');
+  };
+
+  const handleDelete = async (id) => {
+    if (window.confirm('Are you sure you want to delete this record?')) {
+      try {
+        // Delete the document from Firestore
+        await deleteDoc(doc(db, 'trips', id));
+        toast.success('Record deleted successfully!');
+
+        // Remove the deleted record from the local state
+        setSearchResults((prevResults) => prevResults.filter((item) => item.id !== id));
+      } catch (error) {
+        toast.error('Error deleting record: ' + error.message);
+      }
+    }
+  };
+
+
+
   const handleExport = () => {
     if (searchResults.length === 0) {
       toast.error('No data to export');
@@ -444,7 +357,7 @@ const Dashboard = () => {
 
   return (
     <DashboardContainer>
-      
+
       <ContentContainer>
         <SearchBar>
           <InputWrapper>
@@ -473,7 +386,7 @@ const Dashboard = () => {
             <Loader />
           ) : (
             <TableWrapper>
-              {searchResults.length > 0 && (
+              {currentRecords.length > 0 && (
                 <StyledTable>
                   <StyledTableHead>
                     <TableRow>
@@ -500,11 +413,11 @@ const Dashboard = () => {
                       <TableCell>Invoice Date</TableCell>
                       <TableCell>Remarks</TableCell>
                       <TableCell>Created</TableCell>
-                      <TableCell>User</TableCell>
+                      <TableCell>Action</TableCell>
                     </TableRow>
                   </StyledTableHead>
                   <StyledTableBody>
-                    {searchResults.map((result) => (
+                    {currentRecords.map((result) => (
                       <TableRow key={result.id}>
                         <TableCell>{result.tripDate}</TableCell>
                         <TableCell>{result.truckPlateNumber}</TableCell>
@@ -529,6 +442,35 @@ const Dashboard = () => {
                         <TableCell>{result.invoiceDate}</TableCell>
                         <TableCell>{result.remarks}</TableCell>
                         <TableCell>{result.created}</TableCell>
+                        <TableCell>
+                          <button
+                            style={{
+                              padding: '5px 10px',
+                              marginRight: '5px',
+                              backgroundColor: '#007bff',
+                              color: '#fff',
+                              border: 'none',
+                              borderRadius: '3px',
+                              cursor: 'pointer',
+                            }}
+                            onClick={() => handleEdit(result)}
+                          >
+                            Edit
+                          </button>
+                          <button
+                            style={{
+                              padding: '5px 10px',
+                              backgroundColor: '#dc3545',
+                              color: '#fff',
+                              border: 'none',
+                              borderRadius: '3px',
+                              cursor: 'pointer',
+                            }}
+                            onClick={() => handleDelete(result.id)}
+                          >
+                            Delete
+                          </button>
+                        </TableCell>
                       </TableRow>
                     ))}
                   </StyledTableBody>
@@ -537,13 +479,13 @@ const Dashboard = () => {
             </TableWrapper>
           )}
           <PaginationControls>
-            <PaginationButton onClick={() => setCurrentPage((p) => Math.max(p - 1, 1))} disabled={currentPage === 1}>Previous</PaginationButton>
-            <span>Page {currentPage}</span>
-            <PaginationButton onClick={() => setCurrentPage((p) => p + 1)} disabled={currentPage === Math.ceil(searchResults.length / recordsPerPage)}>Next</PaginationButton>
+            <PaginationButton onClick={handlePreviousPage} disabled={currentPage === 1}>Previous</PaginationButton>
+            <span>Page {currentPage} of {totalPages}</span>
+            <PaginationButton onClick={handleNextPage} disabled={currentPage === totalPages}>Next</PaginationButton>
           </PaginationControls>
         </RightSideContainer>
 
-        
+
 
         <ToastContainer />
       </ContentContainer>

@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import styled, { keyframes } from 'styled-components';
 import { db, auth } from '../firebase';
-import { collection, addDoc, getDocs } from 'firebase/firestore';
+import { doc, addDoc, updateDoc, collection, getDoc, getDocs } from 'firebase/firestore';
 import { onAuthStateChanged } from 'firebase/auth';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Sidebar from '../components/Sidebar';
 import Modal from 'react-modal';
 import { BsWindowSidebar } from 'react-icons/bs';
+import { useSearchParams } from 'react-router-dom'; // Import useSearchParams
 
 
 // Styled Components
@@ -101,10 +102,6 @@ const Select = styled.select`
   }
 `;
 
-const InputLabel = styled.label`
-  font-weight: bold;
-  margin-bottom: 0.5rem;
-`;
 
 const Input = styled.input`
   padding: 0.5rem;
@@ -162,7 +159,6 @@ const Loader = styled.div`
 
 const AddNewTrip = () => {
   const [loggedIn, setLoggedIn] = useState(false);
-  const [isModalOpen, setIsModalOpen] = useState(false);
   const [loading, setLoading] = useState(false);
   const [customers, setCustomers] = useState([]);
   const [newCustomerName, setNewCustomerName] = useState('');
@@ -199,7 +195,34 @@ const AddNewTrip = () => {
   };
 
   const [formData, setFormData] = useState(initialFormData);
+  const [isEditMode, setIsEditMode] = useState(false); // Track if editing mode
 
+  const [searchParams] = useSearchParams(); // Use useSearchParams hook
+
+  useEffect(() => {
+    // Check if editing mode (id exists in query params)
+    const id = searchParams.get('id');
+    if (id) {
+      setIsEditMode(true); // Set editing mode
+      fetchRecord(id); // Fetch record data
+    }
+  }, [searchParams]);
+
+  // Fetch record data by ID for editing
+  const fetchRecord = async (id) => {
+    try {
+      const docRef = doc(db, 'trips', id);
+      const docSnapshot = await getDoc(docRef);
+      if (docSnapshot.exists()) {
+        setFormData(docSnapshot.data());
+      } else {
+        toast.error('Record not found!');
+      }
+    } catch (error) {
+      console.error('Error fetching record:', error.message);
+      toast.error('Error fetching record: ' + error.message);
+    }
+  };
 
   // Check if user is logged in
   useEffect(() => {
@@ -229,7 +252,6 @@ const AddNewTrip = () => {
     fetchCustomers();
   }, []);
 
-  const closeModal = () => setIsModalOpen(false);
 
   // Handle input changes
   const handleInputChange = (e) => {
@@ -254,6 +276,7 @@ const AddNewTrip = () => {
         return;
       }
 
+      const id = searchParams.get('id'); // Get the record ID from the query params
       const dataToSave = {
         ...formData,
         created: new Date().toISOString(),
@@ -261,13 +284,21 @@ const AddNewTrip = () => {
 
       console.log('Saving the following data:', dataToSave);
 
-      // Save to Firebase
-      const docRef = await addDoc(collection(db, 'trips'), dataToSave);
+      if (isEditMode) {
+        // Update existing record
+        const docRef = doc(db, 'trips', id);
+        await updateDoc(docRef, dataToSave);
+        toast.success('Record updated successfully!');
+        console.log('Document updated with ID:', docRef.id);
+      } else {
+        // Add new record
+        const newDocRef = await addDoc(collection(db, 'trips'), dataToSave);
+        toast.success('Record added successfully!');
+        console.log('Document added with ID:', newDocRef.id);
+      }
 
-      console.log('Document written with ID:', docRef.id);
-
-      toast.success('Trip data saved successfully!');
-      setFormData(initialFormData); // Reset form after saving
+      // Reset form after saving
+      setFormData(initialFormData);
     } catch (error) {
       console.error('Error saving trip data:', error.message);
       toast.error('Error saving trip data: ' + error.message);
@@ -277,12 +308,14 @@ const AddNewTrip = () => {
     }
   };
 
+
   const handleAddCustomer = async (e) => {
     e.preventDefault();
     setModalLoading(true); // Start loader
 
     try {
-      const newCustomer = { customer: newCustomerName,created: new Date().toISOString(), // Set created date
+      const newCustomer = {
+        customer: newCustomerName, created: new Date().toISOString(), // Set created date
       };
       await addDoc(collection(db, 'customers'), newCustomer);
       setCustomers((prev) => [...prev, { created: Date.now(), customer: newCustomerName }]);
@@ -293,7 +326,7 @@ const AddNewTrip = () => {
     } catch (error) {
       console.error('Error adding customer:', error.message);
       toast.error('Failed to add customer: ' + error.message);
-    }finally {
+    } finally {
       setModalLoading(false); // Stop loader
     }
   };
@@ -301,265 +334,265 @@ const AddNewTrip = () => {
   return (
     <DashboardContainer>
       <ContentContainer>
-      {loading ? (
+        {loading ? (
           <LoaderContainer>
             <Loader />
           </LoaderContainer>
         ) : (
-        <form onSubmit={handleSubmit}>
-          <center><h2>Trip Data Entry</h2></center>
-          <SectionContainer>
-            <InputWrapper>
-              <Label>Date:</Label>
-              <Input
-                type="date"
-                name="tripDate"
-                value={formData.tripDate}
-                onChange={handleInputChange}
-                required
-              />
-            </InputWrapper>
-          </SectionContainer>
+          <form onSubmit={handleSubmit}>
+            <center><h2>Trip Data Entry</h2></center>
+            <SectionContainer>
+              <InputWrapper>
+                <Label>Date:</Label>
+                <Input
+                  type="date"
+                  name="tripDate"
+                  value={formData.tripDate}
+                  onChange={handleInputChange}
+                  required
+                />
+              </InputWrapper>
+            </SectionContainer>
 
-          <h3>Truck Info</h3>
-          <SectionContainer>
-            <InputWrapper>
-              <Label>Truck Plate Number:</Label>
-              <Input
-                type="text"
-                name="truckPlateNumber"
-                value={formData.truckPlateNumber}
-                onChange={handleInputChange}
-                required
-              />
-            </InputWrapper>
-            <InputWrapper>
-              <Label>Truck Driver Name:</Label>
-              <Input
-                type="text"
-                name="truckDriverName"
-                value={formData.truckDriverName}
-                onChange={handleInputChange}
-              />
-            </InputWrapper>
-            <InputWrapper>
-              <Label>Truck Category:</Label>
-              <Input
-                type="text"
-                name="truckCategory"
-                value={formData.truckCategory}
-                onChange={handleInputChange}
-              />
-            </InputWrapper>
-            <InputWrapper>
-              <Label>Delivery Note:</Label>
-              <Select
-                name="deliveryNote"
-                value={formData.deliveryNote}
-                onChange={handleInputChange}
-              >
-                <option value="">Select Status</option>
-                <option value="Received">Received</option>
-                <option value="Not Received">Not Received</option>
-              </Select>
-            </InputWrapper>
-          </SectionContainer>
+            <h3>Truck Info</h3>
+            <SectionContainer>
+              <InputWrapper>
+                <Label>Truck Plate Number:</Label>
+                <Input
+                  type="text"
+                  name="truckPlateNumber"
+                  value={formData.truckPlateNumber}
+                  onChange={handleInputChange}
+                  required
+                />
+              </InputWrapper>
+              <InputWrapper>
+                <Label>Truck Driver Name:</Label>
+                <Input
+                  type="text"
+                  name="truckDriverName"
+                  value={formData.truckDriverName}
+                  onChange={handleInputChange}
+                />
+              </InputWrapper>
+              <InputWrapper>
+                <Label>Truck Category:</Label>
+                <Input
+                  type="text"
+                  name="truckCategory"
+                  value={formData.truckCategory}
+                  onChange={handleInputChange}
+                />
+              </InputWrapper>
+              <InputWrapper>
+                <Label>Delivery Note:</Label>
+                <Select
+                  name="deliveryNote"
+                  value={formData.deliveryNote}
+                  onChange={handleInputChange}
+                >
+                  <option value="">Select Status</option>
+                  <option value="Received">Received</option>
+                  <option value="Not Received">Not Received</option>
+                </Select>
+              </InputWrapper>
+            </SectionContainer>
 
-  <h3>Customer Info</h3>
-  <SectionContainer>
-  <InputWrapper>
-  <Label>Customer Name:</Label>
-              <Select
-                name="customerName"
-                value={formData.customerName}
-                onChange={handleInputChange}
-              >
-                <option value="">Select Customer</option>
-                {customers.map((customer) => (
-                  <option key={customer.id} value={customer.name}>
-                    {customer.name}
-                  </option>
-                ))}
-              </Select>
-              <button
-                type="button"
-                onClick={() => setIsCustomerModalOpen(true)}
-                style={{
-                  marginTop: '10px',
-                  padding: '5px 10px',
-                  backgroundColor: '#007bff',
-                  color: '#fff',
-                  border: 'none',
-                  borderRadius: '5px',
-                  cursor: 'pointer',
-                }}
-              >
-                Add Customer
-              </button>
-    </InputWrapper>
-    <InputWrapper>
-      <Label>C/O:</Label>
-      <Input
-        type="text"
-        name="cO"
-        value={formData.cO}
-        onChange={handleInputChange}
-        
-      />
-    </InputWrapper>
-  </SectionContainer>
+            <h3>Customer Info</h3>
+            <SectionContainer>
+              <InputWrapper>
+                <Label>Customer Name:</Label>
+                <Select
+                  name="customerName"
+                  value={formData.customerName}
+                  onChange={handleInputChange}
+                >
+                  <option value="">Select Customer</option>
+                  {customers.map((customer) => (
+                    <option key={customer.id} value={customer.name}>
+                      {customer.name}
+                    </option>
+                  ))}
+                </Select>
+                <button
+                  type="button"
+                  onClick={() => setIsCustomerModalOpen(true)}
+                  style={{
+                    marginTop: '10px',
+                    padding: '5px 10px',
+                    backgroundColor: '#007bff',
+                    color: '#fff',
+                    border: 'none',
+                    borderRadius: '5px',
+                    cursor: 'pointer',
+                  }}
+                >
+                  Add Customer
+                </button>
+              </InputWrapper>
+              <InputWrapper>
+                <Label>C/O:</Label>
+                <Input
+                  type="text"
+                  name="cO"
+                  value={formData.cO}
+                  onChange={handleInputChange}
 
-  <h3>Loading and Offloading Details</h3>
-  <SectionContainer>
-    <InputWrapper>
-      <Label>First Loading:</Label>
-      <Input
-        type="text"
-        name="firstLoading"
-        value={formData.firstLoading}
-        onChange={handleInputChange}
-        
-      />
-    </InputWrapper>
-    <InputWrapper>
-      <Label>First Offloading:</Label>
-      <Input
-        type="text"
-        name="firstOffloading"
-        value={formData.firstOffloading}
-        onChange={handleInputChange}
-        
-      />
-    </InputWrapper>
-    <InputWrapper>
-      <Label>Second Loading:(Optional)</Label>
-      <Input
-        type="text"
-        name="secondLoading"
-        value={formData.secondLoading}
-        onChange={handleInputChange}
-      />
-    </InputWrapper>
-    <InputWrapper>
-      <Label>Second Offloading:(Optional)</Label>
-      <Input
-        type="text"
-        name="secondOffloading"
-        value={formData.secondOffloading}
-        onChange={handleInputChange}
-      />
-    </InputWrapper>
-  </SectionContainer>
+                />
+              </InputWrapper>
+            </SectionContainer>
 
-  <h3>Transaction Details</h3>
-  <SectionContainer>
-    <InputWrapper>
-      <Label>Customer Rate:</Label>
-      <Input
-        type="number"
-        name="customerRate"
-        value={formData.customerRate}
-        onChange={handleInputChange}
-        required
-      />
-    </InputWrapper>
-    <InputWrapper>
-      <Label>Customer Waiting Charges:</Label>
-      <Input
-        type="number"
-        name="customerWaitingCharges"
-        value={formData.customerWaitingCharges}
-        onChange={handleInputChange}
-        required
-      />
-    </InputWrapper>
-    <InputWrapper>
-      <Label>Amount Received:</Label>
-      <Input
-        type="number"
-        name="amountReceived"
-        value={formData.amountReceived}
-        onChange={handleInputChange}
-        required
-      />
-    </InputWrapper>
-    <InputWrapper>
-      <Label>Amount Balance:</Label>
-      <Input
-        type="number"
-        name="amountBalance"
-        value={formData.amountBalance}
-        onChange={handleInputChange}
-        required
-      />
-    </InputWrapper>
-    <InputWrapper>
-      <Label>Driver Rate:</Label>
-      <Input
-        type="number"
-        name="driverRate"
-        value={formData.driverRate}
-        onChange={handleInputChange}
-        
-      />
-    </InputWrapper>
-    <InputWrapper>
-      <Label>Driver Waiting Charges:</Label>
-      <Input
-        type="number"
-        name="driverWaitingCharges"
-        value={formData.driverWaitingCharges}
-        onChange={handleInputChange}
-        
-      />
-    </InputWrapper>
-    <InputWrapper>
-      <Label>Amount Paid:</Label>
-      <Input
-        type="number"
-        name="amountPaid"
-        value={formData.amountPaid}
-        onChange={handleInputChange}
-        required
-      />
-    </InputWrapper>
-    <InputWrapper>
-      <Label>Amount Balance:</Label>
-      <Input
-        type="number"
-        name="transactionAmountBalance"
-        value={formData.transactionAmountBalance}
-        onChange={handleInputChange}
-        required
-      />
-    </InputWrapper>
-  </SectionContainer>
+            <h3>Loading and Offloading Details</h3>
+            <SectionContainer>
+              <InputWrapper>
+                <Label>First Loading:</Label>
+                <Input
+                  type="text"
+                  name="firstLoading"
+                  value={formData.firstLoading}
+                  onChange={handleInputChange}
 
-  <h3>Invoice Details</h3>
-  <SectionContainer>
-    <InputWrapper>
-      <Label>Invoice No:</Label>
-      <Input
-        type="number"
-        name="invoiceNo"
-        value={formData.invoiceNo}
-        onChange={handleInputChange}
-        required
-      />
-    </InputWrapper>
-    <InputWrapper>
-      <Label>Invoice Date:</Label>
-      <Input
-        type="date"
-        name="invoiceDate"
-        value={formData.invoiceDate}
-        onChange={handleInputChange}
-        required
-      />
-    </InputWrapper>
-    </SectionContainer>
+                />
+              </InputWrapper>
+              <InputWrapper>
+                <Label>First Offloading:</Label>
+                <Input
+                  type="text"
+                  name="firstOffloading"
+                  value={formData.firstOffloading}
+                  onChange={handleInputChange}
 
-  <SubmitButtonGroup>
+                />
+              </InputWrapper>
+              <InputWrapper>
+                <Label>Second Loading:(Optional)</Label>
+                <Input
+                  type="text"
+                  name="secondLoading"
+                  value={formData.secondLoading}
+                  onChange={handleInputChange}
+                />
+              </InputWrapper>
+              <InputWrapper>
+                <Label>Second Offloading:(Optional)</Label>
+                <Input
+                  type="text"
+                  name="secondOffloading"
+                  value={formData.secondOffloading}
+                  onChange={handleInputChange}
+                />
+              </InputWrapper>
+            </SectionContainer>
+
+            <h3>Transaction Details</h3>
+            <SectionContainer>
+              <InputWrapper>
+                <Label>Customer Rate:</Label>
+                <Input
+                  type="number"
+                  name="customerRate"
+                  value={formData.customerRate}
+                  onChange={handleInputChange}
+                  required
+                />
+              </InputWrapper>
+              <InputWrapper>
+                <Label>Customer Waiting Charges:</Label>
+                <Input
+                  type="number"
+                  name="customerWaitingCharges"
+                  value={formData.customerWaitingCharges}
+                  onChange={handleInputChange}
+                  required
+                />
+              </InputWrapper>
+              <InputWrapper>
+                <Label>Amount Received:</Label>
+                <Input
+                  type="number"
+                  name="amountReceived"
+                  value={formData.amountReceived}
+                  onChange={handleInputChange}
+                  required
+                />
+              </InputWrapper>
+              <InputWrapper>
+                <Label>Amount Balance:</Label>
+                <Input
+                  type="number"
+                  name="amountBalance"
+                  value={formData.amountBalance}
+                  onChange={handleInputChange}
+                  required
+                />
+              </InputWrapper>
+              <InputWrapper>
+                <Label>Driver Rate:</Label>
+                <Input
+                  type="number"
+                  name="driverRate"
+                  value={formData.driverRate}
+                  onChange={handleInputChange}
+
+                />
+              </InputWrapper>
+              <InputWrapper>
+                <Label>Driver Waiting Charges:</Label>
+                <Input
+                  type="number"
+                  name="driverWaitingCharges"
+                  value={formData.driverWaitingCharges}
+                  onChange={handleInputChange}
+
+                />
+              </InputWrapper>
+              <InputWrapper>
+                <Label>Amount Paid:</Label>
+                <Input
+                  type="number"
+                  name="amountPaid"
+                  value={formData.amountPaid}
+                  onChange={handleInputChange}
+                  required
+                />
+              </InputWrapper>
+              <InputWrapper>
+                <Label>Amount Balance:</Label>
+                <Input
+                  type="number"
+                  name="transactionAmountBalance"
+                  value={formData.transactionAmountBalance}
+                  onChange={handleInputChange}
+                  required
+                />
+              </InputWrapper>
+            </SectionContainer>
+
+            <h3>Invoice Details</h3>
+            <SectionContainer>
+              <InputWrapper>
+                <Label>Invoice No:</Label>
+                <Input
+                  type="number"
+                  name="invoiceNo"
+                  value={formData.invoiceNo}
+                  onChange={handleInputChange}
+                  required
+                />
+              </InputWrapper>
+              <InputWrapper>
+                <Label>Invoice Date:</Label>
+                <Input
+                  type="date"
+                  name="invoiceDate"
+                  value={formData.invoiceDate}
+                  onChange={handleInputChange}
+                  required
+                />
+              </InputWrapper>
+            </SectionContainer>
+
+            <SubmitButtonGroup>
               <SaveButton type="submit" disabled={loading}>
                 {loading ? 'Saving...' : 'Save'}
               </SaveButton>
@@ -567,12 +600,12 @@ const AddNewTrip = () => {
                 Cancel
               </CancelButton>
             </SubmitButtonGroup>
-</form>
-   )}
-          
+          </form>
+        )}
 
-{/* Add Customer Modal */}
-<Modal
+
+        {/* Add Customer Modal */}
+        <Modal
           isOpen={isCustomerModalOpen}
           onRequestClose={() => setIsCustomerModalOpen(false)}
           contentLabel="Add New Customer"
@@ -592,8 +625,9 @@ const AddNewTrip = () => {
               required
             />
             <ModalButtons>
-              <button type="submit" style={{ backgroundColor: '#28a745', color: '#fff', padding: '10px', border: 'none', borderRadius: '5px',                  cursor: 'pointer', // Hand cursor
- }}>
+              <button type="submit" style={{
+                backgroundColor: '#28a745', color: '#fff', padding: '10px', border: 'none', borderRadius: '5px', cursor: 'pointer', // Hand cursor
+              }}>
                 Save
               </button>
               <button
