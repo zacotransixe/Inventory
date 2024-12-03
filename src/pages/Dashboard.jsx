@@ -345,7 +345,46 @@ const Dashboard = () => {
       toast.error('No data to export');
       return;
     }
-    const csv = Papa.unparse(searchResults);
+
+    // Define custom headers
+    const headers = [
+      { label: 'Trip Date', key: 'tripDate' },
+      { label: 'Truck Plate Number', key: 'truckPlateNumber' },
+      { label: 'Truck Driver Name', key: 'truckDriverName' },
+      { label: 'Truck Category', key: 'truckCategory' },
+      { label: 'Delivery Note', key: 'deliveryNote' },
+      { label: 'Customer Name', key: 'customerName' },
+      { label: 'C/O', key: 'cO' },
+      { label: 'First Loading', key: 'firstLoading' },
+      { label: 'First Offloading', key: 'firstOffloading' },
+      { label: 'Second Loading', key: 'secondLoading' },
+      { label: 'Second Offloading', key: 'secondOffloading' },
+      { label: 'Customer Rate', key: 'customerRate' },
+      { label: 'Customer Waiting Charges', key: 'customerWaitingCharges' },
+      { label: 'Amount Received', key: 'amountReceived' },
+      { label: 'Amount Balance', key: 'amountBalance' },
+      { label: 'Driver Rate', key: 'driverRate' },
+      { label: 'Driver Waiting Charges', key: 'driverWaitingCharges' },
+      { label: 'Amount Paid', key: 'amountPaid' },
+      { label: 'Transaction Amount Balance', key: 'transactionAmountBalance' },
+      { label: 'Invoice No', key: 'invoiceNo' },
+      { label: 'Invoice Date', key: 'invoiceDate' },
+      { label: 'Remarks', key: 'remarks' },
+      { label: 'Created Date', key: 'created' },
+    ];
+
+    // Map search results to match custom headers
+    const formattedData = searchResults.map((result) =>
+      headers.reduce((acc, header) => {
+        acc[header.label] = result[header.key] || ''; // Use the key to fetch the value, default to empty string if missing
+        return acc;
+      }, {})
+    );
+
+    // Add headers to the CSV data
+    const csv = Papa.unparse(formattedData);
+
+    // Export the CSV
     const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
     const link = document.createElement('a');
     link.href = URL.createObjectURL(blob);
@@ -354,6 +393,7 @@ const Dashboard = () => {
     link.click();
     document.body.removeChild(link);
   };
+
 
   return (
     <DashboardContainer>
