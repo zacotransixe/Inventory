@@ -4,6 +4,11 @@ import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../firebase';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
+import { Timestamp } from "firebase/firestore";
+import { Tooltip as ReactTooltip } from 'react-tooltip';
+import { unparse } from 'papaparse';
+
+
 
 const ReportsContainer = styled.div`
   display: flex;
@@ -191,15 +196,63 @@ const MonthlyExpensesTable = styled.table`
   }
 `;
 
+const TabsContainer = styled.div`
+  display: flex;
+  margin-bottom: 20px;
+  border-bottom: 2px solid #ddd;
+`;
+
+const Tab = styled.button`
+  padding: 10px 20px;
+  font-size: 1rem;
+  font-weight: bold;
+  background-color: ${({ active }) => (active ? '#007bff' : 'white')};
+  color: ${({ active }) => (active ? 'white' : '#007bff')};
+  border: none;
+  cursor: pointer;
+  border-bottom: ${({ active }) => (active ? '2px solid #007bff' : 'none')};
+
+  &:hover {
+    background-color: #e7f0ff;
+  }
+`;
+
+const ExportButtonContainer = styled.div`
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 10px; /* Add spacing below the button if needed */
+  margin-right:10px;
+`;
+
+const ExportButton = styled.button`
+  padding: 5px 10px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 5px;
+  cursor: pointer;
+
+  &:hover {
+    background-color: #0056b3;
+  }
+`;
+
+
+
 const Reports = () => {
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
+  const [activeTab, setActiveTab] = useState(0); // State to track active tab
+
   const [loading, setLoading] = useState(false);
   const [monthWiseData, setMonthWiseData] = useState([]);
   const [customerDriverSummary, setCustomerDriverTotals] = useState([]);
   const [customerWiseReport, setCustomerWiseReport] = useState([]);
   const [monthlyExpenses, setMonthlyExpenses] = useState([]);
   const [loadToOffloadReport, setLoadToOffloadReport] = useState([]);
+
+  const [admins, setAdmins] = useState([]); // Add this to store admin data
+
 
   const fetchReports = async () => {
     if (!fromDate || !toDate) {
@@ -210,51 +263,53 @@ const Reports = () => {
     setLoading(true);
 
     try {
-      // Convert dates to timestamps for querying
-
-
-      // Fetch Trips Data
       const tripsQuery = query(
         collection(db, 'trips'),
         where('tripDate', '>=', fromDate),
         where('tripDate', '<=', toDate)
-      )
-
-
+      );
       const tripsSnapshot = await getDocs(tripsQuery);
-
       const tripsData = tripsSnapshot.docs.map((doc) => doc.data());
 
-      console.log(fromDate, toDate);
-      // Fetch Expenses Data
       const expensesQuery = query(
         collection(db, 'expenses'),
         where('date', '>=', fromDate),
         where('date', '<=', toDate)
       );
       const expensesSnapshot = await getDocs(expensesQuery);
-
       const expensesData = expensesSnapshot.docs.map((doc) => doc.data());
 
-      // Generate Month-Wise Summary
-      const monthSummary = generateMonthSummary(tripsData, expensesData);
+      // Fetch adminData and filter by active status within the date range
+      const adminSnapshot = await getDocs(collection(db, 'adminData'));
+      const adminData = adminSnapshot.docs
+        .map((doc) => doc.data())
+        .filter((admin) => {
+          if (admin.status === 'Inactive' && admin.endDate) {
+            const endDate = new Date(admin.endDate);
+            const rangeStart = new Date(fromDate);
+            const rangeEnd = new Date(toDate);
+            return endDate >= rangeStart && endDate <= rangeEnd;
+          }
+          return admin.status === 'Active';
+        });
+
+      setAdmins(adminData); // Update the admins state
+
+      const partnerExpenses = await fetchPartnerExpenses();
+
+
+      const monthSummary = generateMonthSummary(tripsData, expensesData, adminData, partnerExpenses);
       setMonthWiseData(monthSummary);
 
-      // Generate Customer and Driver Totals
-      const customerDriverSummary = generateCustomerDriverSummary(tripsData);
-      setCustomerDriverTotals(customerDriverSummary);
+      const customerDriverSummaryData = generateCustomerDriverSummary(tripsData);
+      setCustomerDriverTotals(customerDriverSummaryData); // Update the state here
 
-      // Generate Customer-Wise Report
-      const customerReport = generateCustomerWiseReport(tripsData);
-      setCustomerWiseReport(customerReport);
+      const customerSummary = generateCustomerWiseReport(tripsData);
+      setCustomerWiseReport(customerSummary);
 
-      // Generate Monthly Expenses
-      const monthlyExpenseReport = generateMonthlyExpenses(expensesData);
-      setMonthlyExpenses(monthlyExpenseReport);
+      const monthlyExpensesSummary = generateMonthlyExpenses(expensesData);
+      setMonthlyExpenses(monthlyExpensesSummary);
 
-      // Generate LoadTo and UploadTo Report
-      const loadToOffload = generateLoadToOffloadReport(tripsData);
-      setLoadToOffloadReport(loadToOffload);
 
       setLoading(false);
     } catch (error) {
@@ -263,10 +318,37 @@ const Reports = () => {
     }
   };
 
-  const generateMonthSummary = (trips, expenses) => {
-    console.log('Trips data:', trips);
+  const fetchPartnerExpenses = async () => {
+    try {
+      const partnerExpensesCollection = collection(db, "PRTData"); // Reference to the PRTData collection
+      const snapshot = await getDocs(partnerExpensesCollection); // Fetch documents from the collection
 
+      // Map the snapshot to extract required fields
+      const partnerExpenses = snapshot.docs.map((doc) => {
+        const data = doc.data();
+        return {
+          partnerName: data.partnerName,
+          amount: parseFloat(data.amount), // Convert amount to number
+          date: data.date.toDate(), // Convert Firestore Timestamp to JavaScript Date
+        };
+      });
+
+      console.log("Fetched Partner Expenses:", partnerExpenses);
+
+      return partnerExpenses;
+    } catch (error) {
+      console.error("Error fetching partner expenses:", error);
+      return []; // Return an empty array in case of error
+    }
+  };
+
+
+  const generateMonthSummary = (trips = [], expenses = [], admins = [], partnerExpenses = []) => {
     const summary = {};
+    console.log("Trips Data:", trips);
+    console.log("Expenses Data:", expenses);
+    console.log("Admins Data:", admins);
+    console.log("Partner Expenses Data:", partnerExpenses);
 
     // Process trips
     trips.forEach((trip) => {
@@ -277,8 +359,8 @@ const Reports = () => {
 
       if (!summary[key]) {
         summary[key] = {
-          year, // Add year as a separate field
-          month, // Add month as a separate field
+          year,
+          month,
           trips: 0,
           customerRate: 0,
           customerWait: 0,
@@ -288,27 +370,26 @@ const Reports = () => {
           driverTotal: 0,
           expenses: 0,
           deduction: 0,
-          profit: 0, // Initialize profit
-          altaf: 0,
-          mansoor: 0,
+          profit: 0,
+          profitShares: {},
         };
       }
 
-      summary[key].trips += 1; // Increment trip count
-      summary[key].customerRate += parseFloat(trip.customerRate || 0); // Add customer rate
-      summary[key].customerWait += parseFloat(trip.customerWaitingCharges || 0); // Add customer waiting charges
-      summary[key].driverRate += parseFloat(trip.driverRate || 0); // Add driver rate
-      summary[key].driverWait += parseFloat(trip.driverWaitingCharges || 0); // Add driver waiting charges
-
-      // Calculate totals
-      summary[key].customerTotal = summary[key].customerRate + summary[key].customerWait;
-      summary[key].driverTotal = summary[key].driverRate + summary[key].driverWait;
-
-      // Calculate deduction (3%)
+      summary[key].trips += 1;
+      summary[key].customerRate += parseFloat(trip.customerRate || 0);
+      summary[key].customerWait += parseFloat(trip.customerWaitingCharges || 0);
+      summary[key].driverRate += parseFloat(trip.driverRate || 0);
+      summary[key].driverWait += parseFloat(trip.driverWaitingCharges || 0);
+      summary[key].customerTotal =
+        summary[key].customerRate + summary[key].customerWait;
+      summary[key].driverTotal =
+        summary[key].driverRate + summary[key].driverWait;
       summary[key].deduction = Number(
         (summary[key].customerTotal - summary[key].driverTotal) * 0.03
       );
     });
+
+    console.log("Intermediate Summary (after trips):", summary);
 
     // Process expenses
     expenses.forEach((expense) => {
@@ -319,8 +400,8 @@ const Reports = () => {
 
       if (!summary[key]) {
         summary[key] = {
-          year, // Add year as a separate field
-          month, // Add month as a separate field
+          year,
+          month,
           trips: 0,
           customerRate: 0,
           customerWait: 0,
@@ -330,27 +411,127 @@ const Reports = () => {
           driverTotal: 0,
           expenses: 0,
           deduction: 0,
-          profit: 0, // Initialize profit
+          profit: 0,
+          profitShares: {},
         };
       }
 
-      summary[key].expenses += parseFloat(expense.amount || 0); // Add expense amount
+      summary[key].expenses += parseFloat(expense.amount || 0);
     });
 
-    // Calculate profit
+    console.log("Intermediate Summary (after expenses):", summary);
+
+    // Calculate profits and distribute shares
     Object.keys(summary).forEach((key) => {
       const { customerTotal, driverTotal, expenses, deduction } = summary[key];
-      summary[key].profit = customerTotal - driverTotal - expenses - deduction;
-      // Split profit
-      summary[key].altaf = summary[key].profit * 0.5;
-      summary[key].mansoor = summary[key].profit * 0.5;
+      summary[key].profit =
+        customerTotal - driverTotal - expenses - deduction;
+
+      const [year, month] = key.split('-');
+      const monthStart = new Date(year, month - 1, 1);
+      const monthEnd = new Date(year, month, 0);
+      monthEnd.setHours(23, 59, 59, 999);
+
+      console.log(`Processing Summary for ${key}:`, summary[key]);
+
+      // Filter active admins
+      const activeAdmins = admins.filter((admin) => {
+        const adminStart = new Date(admin.startDate).getTime();
+        const adminEnd = admin.endDate
+          ? new Date(admin.endDate).getTime()
+          : null;
+
+        const isActive =
+          adminStart <= monthEnd.getTime() &&
+          (!adminEnd || adminEnd >= monthStart.getTime());
+
+        console.log(
+          `Admin "${admin.name}" (Start: ${admin.startDate}, End: ${admin.endDate || "Ongoing"
+          }): Month Start: ${monthStart}, Month End: ${monthEnd}, Active? ${isActive}`
+        );
+
+        return isActive;
+      });
+
+      console.log(`Active Admins for ${key}:`, activeAdmins);
+
+      // Calculate total percentage
+      const totalPercentage = activeAdmins.reduce(
+        (sum, admin) => sum + parseFloat(admin.percentage || 0),
+        0
+      );
+
+      console.log(`Total Percentage for ${key}:`, totalPercentage);
+
+      // Distribute profit shares
+      activeAdmins.forEach((admin) => {
+        const percentage = parseFloat(admin.percentage || 0) / 100;
+
+        if (!summary[key].profitShares[admin.name]) {
+          summary[key].profitShares[admin.name] = 0;
+        }
+
+        summary[key].profitShares[admin.name] +=
+          summary[key].profit * percentage || 0;
+
+        console.log(
+          `Admin "${admin.name}" Share in ${key}:`,
+          summary[key].profitShares[admin.name]
+        );
+      });
+
+      console.log("Partner Expenses Data:", partnerExpenses);
+
+      // Deduct partner expenses
+      // Deduct partner expenses and update deductions
+      partnerExpenses
+        .filter((expense) => {
+          const expenseDate = new Date(expense.date);
+          const expenseYear = expenseDate.getFullYear();
+          const expenseMonth = String(expenseDate.getMonth() + 1).padStart(2, '0');
+          return `${expenseYear}-${expenseMonth}` === key;
+        })
+        .forEach((expense) => {
+          const partnerName = expense.partnerName;
+          const amount = parseFloat(expense.amount || 0);
+
+          // Deduct amount from profitShares
+          if (summary[key].profitShares[partnerName]) {
+            summary[key].profitShares[partnerName] -= amount;
+
+            // Ensure deductions field exists and update it
+            if (!summary[key].deductions) {
+              summary[key].deductions = {};
+            }
+            if (!summary[key].deductions[partnerName]) {
+              summary[key].deductions[partnerName] = 0;
+            }
+            summary[key].deductions[partnerName] += amount;
+
+            console.log(
+              `Deducting ${amount} for "${partnerName}" in ${key}:`,
+              summary[key].profitShares[partnerName]
+            );
+          }
+        });
+
+      // Ensure all admins have a share, even if zero
+      admins.forEach((admin) => {
+        if (!summary[key].profitShares[admin.name]) {
+          summary[key].profitShares[admin.name] = 0;
+        }
+      });
+
+
+      console.log(`Final Profit Shares for ${key}:`, summary[key].profitShares);
     });
 
-    // Convert the summary object into an array
-    return Object.values(summary).sort((a, b) => new Date(a.month) - new Date(b.month));
+    console.log("Final Summary:", summary);
+
+    return Object.values(summary).sort(
+      (a, b) => new Date(a.year, a.month - 1) - new Date(b.year, b.month - 1)
+    );
   };
-
-
 
   const generateCustomerDriverSummary = (trips) => {
     console.log('Trips : ', trips);
@@ -424,8 +605,6 @@ const Reports = () => {
     };
   };
 
-
-
   const generateCustomerWiseReport = (trips) => {
     const customerSummary = {};
 
@@ -456,7 +635,11 @@ const Reports = () => {
     return Object.values(customerSummary);
   };
 
-  const generateMonthlyExpenses = (expenses) => {
+  const generateMonthlyExpenses = (expenses = []) => {
+    if (!expenses || expenses.length === 0) {
+      return []; // Return empty array if no expenses
+    }
+
     const summary = {};
 
     expenses.forEach((expense) => {
@@ -476,12 +659,27 @@ const Reports = () => {
       summary[key].totalExpenses += parseFloat(expense.amount || 0);
     });
 
-    return Object.values(summary).sort((a, b) => new Date(a.year, a.month) - new Date(b.year, b.month));
+    return Object.values(summary).sort(
+      (a, b) => new Date(a.year, a.month - 1) - new Date(b.year, b.month - 1)
+    );
   };
 
-  const generateLoadToOffloadReport = (trips) => {
-    // Logic for generating LoadFrom and UploadTo report
-    return [];
+  const exportToCSV = (data, filename) => {
+    if (!data || data.length === 0) {
+      console.error("No data available to export.");
+      return;
+    }
+
+    const csv = unparse(data); // Convert data to CSV format
+    const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+
+    const link = document.createElement('a');
+    link.href = url;
+    link.setAttribute('download', filename);
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
   };
 
   return (
@@ -509,170 +707,294 @@ const Reports = () => {
           <SearchButton onClick={fetchReports}>Search</SearchButton>
         </Header>
 
+        {/* Tabs Navigation */}
+        <TabsContainer>
+          <Tab active={activeTab === 0} onClick={() => setActiveTab(0)}>
+            Month-Wise Summary
+          </Tab>
+          <Tab active={activeTab === 1} onClick={() => setActiveTab(1)}>
+            Customer & Driver Summary
+          </Tab>
+          <Tab active={activeTab === 2} onClick={() => setActiveTab(2)}>
+            Customer Summary
+          </Tab>
+          <Tab active={activeTab === 3} onClick={() => setActiveTab(3)}>
+            Monthly Expenses
+          </Tab>
+        </TabsContainer>
+
+        {/* Tab Content */}
         {loading ? (
           <Loader>Loading...</Loader>
         ) : (
           <>
-            {/* Month-Wise Summary Table */}
-            <TableContainer>
-              <h2>Month-Wise Summary</h2>
-              <Table>
-                <thead>
-                  <tr>
-                    <th>Year</th>
-                    <th>Month</th>
-                    <th>Trips</th>
-                    <th>Customer Rate</th>
-                    <th>Customer Wait</th>
-                    <th>Customer Total</th>
-                    <th>Driver Rate</th>
-                    <th>Driver Wait</th>
-                    <th>Driver Total</th>
-                    <th>Expenses</th>
-                    <th>Deduction (3%)</th>
-                    <th>Profit</th>
-                    <th>Altaf</th>
-                    <th>Mansoor</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {monthWiseData.map((row, index) => (
-                    <tr key={index}>
-                      <td>{row.year || '-'}</td> {/* Display year */}
-                      <td>{row.month || '-'}</td> {/* Display month */}
-                      <td>{row.trips || 0}</td>
-                      <td>{(row.customerRate || 0).toFixed(2)}</td>
-                      <td>{(row.customerWait || 0).toFixed(2)}</td>
-                      <td>{(row.customerTotal || 0).toFixed(2)}</td>
-                      <td>{(row.driverRate || 0).toFixed(2)}</td>
-                      <td>{(row.driverWait || 0).toFixed(2)}</td>
-                      <td>{(row.driverTotal || 0).toFixed(2)}</td>
-                      <td>{(row.expenses || 0).toFixed(2)}</td>
-                      <td>{(row.deduction || 0).toFixed(2)}</td>
-                      <td>{(row.profit || 0).toFixed(2)}</td>
-                      <td>{(row.altaf || 0).toFixed(2)}</td>
-                      <td>{(row.mansoor || 0).toFixed(2)}</td>
-
+            {activeTab === 0 && (
+              <TableContainer>
+                <HeaderTitle>Month-Wise Summary
+                  <ExportButtonContainer>
+                    <ExportButton
+                      onClick={() =>
+                        exportToCSV(
+                          monthWiseData.map((row) => ({
+                            Year: row.year,
+                            Month: row.month,
+                            Trips: row.trips,
+                            CustomerRate: row.customerRate.toFixed(2),
+                            CustomerWait: row.customerWait.toFixed(2),
+                            CustomerTotal: row.customerTotal.toFixed(2),
+                            DriverRate: row.driverRate.toFixed(2),
+                            DriverWait: row.driverWait.toFixed(2),
+                            DriverTotal: row.driverTotal.toFixed(2),
+                            Expenses: row.expenses.toFixed(2),
+                            Deduction: row.deduction.toFixed(2),
+                            Profit: row.profit.toFixed(2),
+                            ...Object.fromEntries(
+                              admins.map((admin) => [
+                                admin.name,
+                                row.profitShares[admin.name]?.toFixed(2) || "0.00",
+                              ])
+                            ),
+                          })),
+                          'MonthWiseSummary.csv'
+                        )
+                      }
+                    >
+                      Export to CSV
+                    </ExportButton>
+                  </ExportButtonContainer>
+                </HeaderTitle>
+                <Table>
+                  <thead>
+                    <tr>
+                      <th>Year</th>
+                      <th>Month</th>
+                      <th>Trips</th>
+                      <th>Customer Rate</th>
+                      <th>Customer Wait</th>
+                      <th>Customer Total</th>
+                      <th>Driver Rate</th>
+                      <th>Driver Wait</th>
+                      <th>Driver Total</th>
+                      <th>Expenses</th>
+                      <th>Deduction (3%)</th>
+                      <th>Profit</th>
+                      {admins.map((admin) => (
+                        <th key={admin.id}>{admin.name}</th>
+                      ))}
                     </tr>
-                  ))}
-                </tbody>
-              </Table>
-            </TableContainer>
-
-            {/* Additional tables for other reports */}
-            <TableContainer>
-              <TableWrapper>
-                {/* Small Table for Customer and Driver Summary */}
-                <SmallTableContainer>
-                  <HeaderTitle>Customer & Driver Summary</HeaderTitle>
-                  <SmallTable>
-                    <thead>
-                      <tr>
-                        <SmallTableHeader>Description</SmallTableHeader>
-                        <SmallTableHeader>Rate</SmallTableHeader>
-                        <SmallTableHeader>Wait</SmallTableHeader>
-                        <SmallTableHeader>Total</SmallTableHeader>
-                        <SmallTableHeader>Paid</SmallTableHeader>
-                        <SmallTableHeader>Balance</SmallTableHeader>
-                        <SmallTableHeader>Trips</SmallTableHeader>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {customerDriverSummary && customerDriverSummary.customer && customerDriverSummary.driver ? (
-                        <>
-                          <tr>
-                            <SmallTableCell>{customerDriverSummary.customer.description || '-'}</SmallTableCell>
-                            <SmallTableCell>{customerDriverSummary.customer.rate || '0.00'}</SmallTableCell>
-                            <SmallTableCell>{customerDriverSummary.customer.wait || '0.00'}</SmallTableCell>
-                            <SmallTableCell>{customerDriverSummary.customer.total || '0.00'}</SmallTableCell>
-                            <SmallTableCell>{customerDriverSummary.customer.paid || '0.00'}</SmallTableCell>
-                            <SmallTableCell>{customerDriverSummary.customer.balance || '0.00'}</SmallTableCell>
-                            <SmallTableCell>{customerDriverSummary.customer.trips || 0}</SmallTableCell>
-                          </tr>
-                          <tr>
-                            <SmallTableCell>{customerDriverSummary.driver.description || '-'}</SmallTableCell>
-                            <SmallTableCell>{customerDriverSummary.driver.rate || '0.00'}</SmallTableCell>
-                            <SmallTableCell>{customerDriverSummary.driver.wait || '0.00'}</SmallTableCell>
-                            <SmallTableCell>{customerDriverSummary.driver.total || '0.00'}</SmallTableCell>
-                            <SmallTableCell>{customerDriverSummary.driver.paid || '0.00'}</SmallTableCell>
-                            <SmallTableCell>{customerDriverSummary.driver.balance || '0.00'}</SmallTableCell>
-                            <SmallTableCell>{customerDriverSummary.driver.trips || 0}</SmallTableCell>
-                          </tr>
-                        </>
-                      ) : (
-                        <tr>
-                          <td colSpan="7" style={{ textAlign: 'center' }}>
-                            No data available
+                  </thead>
+                  <tbody>
+                    {monthWiseData.map((row, index) => (
+                      <tr key={index}>
+                        <td>{row.year || "-"}</td>
+                        <td>{row.month || "-"}</td>
+                        <td>{row.trips || 0}</td>
+                        <td>{(row.customerRate || 0).toFixed(2)}</td>
+                        <td>{(row.customerWait || 0).toFixed(2)}</td>
+                        <td>{(row.customerTotal || 0).toFixed(2)}</td>
+                        <td>{(row.driverRate || 0).toFixed(2)}</td>
+                        <td>{(row.driverWait || 0).toFixed(2)}</td>
+                        <td>{(row.driverTotal || 0).toFixed(2)}</td>
+                        <td>{(row.expenses || 0).toFixed(2)}</td>
+                        <td>{(row.deduction || 0).toFixed(2)}</td>
+                        <td>{(row.profit || 0).toFixed(2)}</td>
+                        {admins.map((admin) => (
+                          <td key={admin.id} data-tooltip-id="admin-tooltip"
+                            data-tooltip-content={`Deduction: ${(row.deductions?.[admin.name] || 0).toFixed(2)}`}>
+                            {(row.profitShares[admin.name] || 0).toFixed(2)}
                           </td>
-                        </tr>
-                      )}
-                    </tbody>
-                  </SmallTable>
-                </SmallTableContainer>
-
-                {/* Placeholder for Additional Table */}
-                <LargeTableContainer>
-                  <HeaderTitle>Customer Summary</HeaderTitle>
-
-                  <LargeTable>
-                    <LargeTableHead>
-                      <LargeTableRow>
-                        <LargeTableHeader>Customer</LargeTableHeader>
-                        <LargeTableHeader>Trips</LargeTableHeader>
-                        <LargeTableHeader>Rate</LargeTableHeader>
-                        <LargeTableHeader>Wait</LargeTableHeader>
-                        <LargeTableHeader>Total</LargeTableHeader>
-                        <LargeTableHeader>Paid</LargeTableHeader>
-                        <LargeTableHeader>Balance</LargeTableHeader>
-                      </LargeTableRow>
-                    </LargeTableHead>
-                    <tbody>
-                      {customerWiseReport.map((customer, index) => (
-                        <LargeTableRow key={index}>
-                          <LargeTableCell>{customer.customer}</LargeTableCell>
-                          <LargeTableCell>{customer.trips}</LargeTableCell>
-                          <LargeTableCell>{customer.rate.toFixed(2)}</LargeTableCell>
-                          <LargeTableCell>{customer.wait.toFixed(2)}</LargeTableCell>
-                          <LargeTableCell>{customer.total.toFixed(2)}</LargeTableCell>
-                          <LargeTableCell>{customer.paid.toFixed(2)}</LargeTableCell>
-                          <LargeTableCell>{customer.balance.toFixed(2)}</LargeTableCell>
-                        </LargeTableRow>
-                      ))}
-                    </tbody>
-                  </LargeTable>
-                </LargeTableContainer>
-
-                {/* New Monthly Expenses Table */}
-                <MonthlyExpensesTableContainer>
-                  <HeaderTitle>Monthly Expenses</HeaderTitle>
-                  <MonthlyExpensesTable>
-                    <thead>
-                      <tr>
-                        <th>Year</th>
-                        <th>Month</th>
-                        <th>Expenses</th>
+                        ))}
                       </tr>
-                    </thead>
-                    <tbody>
-                      {monthlyExpenses.map((expense, index) => (
-                        <tr key={index}>
-                          <td>{expense.year}</td>
-                          <td>{expense.month}</td>
-                          <td>{expense.totalExpenses.toFixed(2)}</td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </MonthlyExpensesTable>
-                </MonthlyExpensesTableContainer>
+                    ))}
+                  </tbody>
 
-              </TableWrapper>
-            </TableContainer>
+
+                </Table>
+
+              </TableContainer>
+
+
+            )}
+            {activeTab === 1 && (
+              <TableContainer>
+                <HeaderTitle>Customer & Driver Summary
+                  <ExportButtonContainer>
+                    <ExportButton
+                      onClick={() =>
+                        exportToCSV(
+                          [
+                            {
+                              Description: "Customer",
+                              Rate: customerDriverSummary.customer.rate,
+                              Wait: customerDriverSummary.customer.wait,
+                              Total: customerDriverSummary.customer.total,
+                              Paid: customerDriverSummary.customer.paid,
+                              Balance: customerDriverSummary.customer.balance,
+                              Trips: customerDriverSummary.customer.trips,
+                            },
+                            {
+                              Description: "Driver",
+                              Rate: customerDriverSummary.driver.rate,
+                              Wait: customerDriverSummary.driver.wait,
+                              Total: customerDriverSummary.driver.total,
+                              Paid: customerDriverSummary.driver.paid,
+                              Balance: customerDriverSummary.driver.balance,
+                              Trips: customerDriverSummary.driver.trips,
+                            },
+                          ],
+                          'CustomerDriverSummary.csv'
+                        )
+                      }
+                    >
+                      Export to CSV
+                    </ExportButton>
+                  </ExportButtonContainer>
+                </HeaderTitle>
+                <Table>
+                  <thead>
+                    <tr>
+                      <th>Description</th>
+                      <th>Rate</th>
+                      <th>Wait</th>
+                      <th>Total</th>
+                      <th>Paid</th>
+                      <th>Balance</th>
+                      <th>Trips</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {customerDriverSummary && customerDriverSummary.customer && customerDriverSummary.driver ? (
+                      <>
+                        <tr>
+                          <td>{customerDriverSummary.customer.description || '-'}</td>
+                          <td>{customerDriverSummary.customer.rate || '0.00'}</td>
+                          <td>{customerDriverSummary.customer.wait || '0.00'}</td>
+                          <td>{customerDriverSummary.customer.total || '0.00'}</td>
+                          <td>{customerDriverSummary.customer.paid || '0.00'}</td>
+                          <td>{customerDriverSummary.customer.balance || '0.00'}</td>
+                          <td>{customerDriverSummary.customer.trips || 0}</td>
+                        </tr>
+                        <tr>
+                          <td>{customerDriverSummary.driver.description || '-'}</td>
+                          <td>{customerDriverSummary.driver.rate || '0.00'}</td>
+                          <td>{customerDriverSummary.driver.wait || '0.00'}</td>
+                          <td>{customerDriverSummary.driver.total || '0.00'}</td>
+                          <td>{customerDriverSummary.driver.paid || '0.00'}</td>
+                          <td>{customerDriverSummary.driver.balance || '0.00'}</td>
+                          <td>{customerDriverSummary.driver.trips || 0}</td>
+                        </tr>
+                      </>
+                    ) : (
+                      <tr>
+                        <td colSpan="7" style={{ textAlign: 'center' }}>
+                          No data available
+                        </td>
+                      </tr>
+                    )}
+                  </tbody>
+                </Table>
+              </TableContainer>
+            )}
+            {activeTab === 2 && (
+              <TableContainer>
+                <HeaderTitle>Customer Summary
+                  <ExportButtonContainer>
+                    <ExportButton
+                      onClick={() =>
+                        exportToCSV(
+                          customerWiseReport.map((customer) => ({
+                            Customer: customer.customer,
+                            Trips: customer.trips,
+                            Rate: customer.rate.toFixed(2),
+                            Wait: customer.wait.toFixed(2),
+                            Total: customer.total.toFixed(2),
+                            Paid: customer.paid.toFixed(2),
+                            Balance: customer.balance.toFixed(2),
+                          })),
+                          'CustomerSummary.csv'
+                        )
+                      }
+                    >
+                      Export to CSV
+                    </ExportButton>
+                  </ExportButtonContainer>
+                </HeaderTitle>
+                <LargeTable>
+                  <LargeTableHead>
+                    <LargeTableRow>
+                      <LargeTableHeader>Customer</LargeTableHeader>
+                      <LargeTableHeader>Trips</LargeTableHeader>
+                      <LargeTableHeader>Rate</LargeTableHeader>
+                      <LargeTableHeader>Wait</LargeTableHeader>
+                      <LargeTableHeader>Total</LargeTableHeader>
+                      <LargeTableHeader>Paid</LargeTableHeader>
+                      <LargeTableHeader>Balance</LargeTableHeader>
+                    </LargeTableRow>
+                  </LargeTableHead>
+                  <tbody>
+                    {customerWiseReport.map((customer, index) => (
+                      <LargeTableRow key={index}>
+                        <LargeTableCell>{customer.customer}</LargeTableCell>
+                        <LargeTableCell>{customer.trips}</LargeTableCell>
+                        <LargeTableCell>{customer.rate.toFixed(2)}</LargeTableCell>
+                        <LargeTableCell>{customer.wait.toFixed(2)}</LargeTableCell>
+                        <LargeTableCell>{customer.total.toFixed(2)}</LargeTableCell>
+                        <LargeTableCell>{customer.paid.toFixed(2)}</LargeTableCell>
+                        <LargeTableCell>{customer.balance.toFixed(2)}</LargeTableCell>
+                      </LargeTableRow>
+                    ))}
+                  </tbody>
+                </LargeTable>
+              </TableContainer>
+            )}
+            {activeTab === 3 && (
+              <TableContainer>
+                <HeaderTitle>Monthly Expenses
+                  <ExportButtonContainer>
+                    <ExportButton
+                      onClick={() =>
+                        exportToCSV(
+                          monthlyExpenses.map((expense) => ({
+                            Year: expense.year,
+                            Month: expense.month,
+                            TotalExpenses: expense.totalExpenses.toFixed(2),
+                          })),
+                          'MonthlyExpenses.csv'
+                        )
+                      }
+                    >
+                      Export to CSV
+                    </ExportButton>
+                  </ExportButtonContainer>
+                </HeaderTitle>
+                <MonthlyExpensesTable>
+                  <thead>
+                    <tr>
+                      <th>Year</th>
+                      <th>Month</th>
+                      <th>Expenses</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {monthlyExpenses.map((expense, index) => (
+                      <tr key={index}>
+                        <td>{expense.year}</td>
+                        <td>{expense.month}</td>
+                        <td>{expense.totalExpenses.toFixed(2)}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </MonthlyExpensesTable>
+              </TableContainer>
+            )}
           </>
         )}
       </ContentContainer>
+      <ReactTooltip id="admin-tooltip" />
       <ToastContainer />
     </ReportsContainer>
   );
 };
+
 
 export default Reports;

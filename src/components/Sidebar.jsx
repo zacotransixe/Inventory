@@ -131,9 +131,9 @@ const Sidebar = () => {
             Customers
           </StyledNavLink>
         </li>
-        {/* <li>
+        <li>
           <StyledNavLink to="/prt" target="_blank" rel="noopener noreferrer">
-            PRT
+            Partner Expenses
           </StyledNavLink>
         </li>
         <li>
@@ -141,7 +141,7 @@ const Sidebar = () => {
             Admin
           </StyledNavLink>
         </li>
-        <li>
+        {/* <li>
           <StyledNavLink to="/about" target="_blank" rel="noopener noreferrer">
             About
           </StyledNavLink>
