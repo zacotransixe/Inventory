@@ -13,7 +13,7 @@ import Home from './pages/Home';
 import AddNewTrip from './pages/AddNewTrip';
 import AddNewExpense from './pages/AddNewExpense';
 import AddNewCustomer from './pages/AddNewCustomer';
-
+import ChangePassword from './pages/ChangePassword';
 
 const App = () => {
   return (
@@ -32,6 +32,8 @@ const App = () => {
         <Route path="/prt" element={<PRT />} /> {/* Add route for PRT */}
         <Route path="/admin" element={<Admin />} /> {/* Add route for Admin */}
         <Route path="/about" element={<About />} /> {/* Add route for About */}
+        <Route path="/change-password" element={<ChangePassword />} /> {/* Add route for About */}
+
         {/* Add other routes here */}
       </Routes>
     </Router>

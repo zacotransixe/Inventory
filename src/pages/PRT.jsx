@@ -338,8 +338,8 @@ const PRT = () => {
               <StyledTableRow>
                 <th>Partner Name</th>
                 <th>Date</th>
-                <th>Comment</th>
                 <th>Amount</th>
+                <th>Comment</th>
                 <th>Actions</th>
               </StyledTableRow>
             </StyledTableHead>

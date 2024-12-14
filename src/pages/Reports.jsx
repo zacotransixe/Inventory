@@ -273,11 +273,14 @@ const Reports = () => {
 
       const expensesQuery = query(
         collection(db, 'expenses'),
-        where('date', '>=', fromDate),
-        where('date', '<=', toDate)
+        where('date', '>=', Timestamp.fromDate(new Date(fromDate))),
+        where('date', '<=', Timestamp.fromDate(new Date(toDate)))
       );
       const expensesSnapshot = await getDocs(expensesQuery);
       const expensesData = expensesSnapshot.docs.map((doc) => doc.data());
+      console.log('Expenses:', expensesData);
+
+
 
       // Fetch adminData and filter by active status within the date range
       const adminSnapshot = await getDocs(collection(db, 'adminData'));
@@ -384,6 +387,8 @@ const Reports = () => {
         summary[key].customerRate + summary[key].customerWait;
       summary[key].driverTotal =
         summary[key].driverRate + summary[key].driverWait;
+
+      // Calculate deduction (3%) without including expenses
       summary[key].deduction = Number(
         (summary[key].customerTotal - summary[key].driverTotal) * 0.03
       );
@@ -393,7 +398,20 @@ const Reports = () => {
 
     // Process expenses
     expenses.forEach((expense) => {
-      const expenseDate = new Date(expense.date);
+      let expenseDate;
+      if (expense.date?.toDate) {
+        expenseDate = expense.date.toDate(); // Firestore Timestamp to Date
+      } else if (typeof expense.date === 'string' || expense.date instanceof String) {
+        expenseDate = new Date(expense.date); // Parse string to Date object
+      } else {
+        expenseDate = new Date(expense.date); // Assume it's already a valid Date or timestamp
+      }
+
+      if (isNaN(expenseDate.getTime())) {
+        console.warn('Invalid date in expense:', expense);
+        return; // Skip invalid dates
+      }
+
       const year = expenseDate.getFullYear();
       const month = String(expenseDate.getMonth() + 1).padStart(2, '0');
       const key = `${year}-${month}`;
@@ -424,6 +442,7 @@ const Reports = () => {
     // Calculate profits and distribute shares
     Object.keys(summary).forEach((key) => {
       const { customerTotal, driverTotal, expenses, deduction } = summary[key];
+      // Profit includes expenses
       summary[key].profit =
         customerTotal - driverTotal - expenses - deduction;
 
@@ -483,7 +502,6 @@ const Reports = () => {
       console.log("Partner Expenses Data:", partnerExpenses);
 
       // Deduct partner expenses
-      // Deduct partner expenses and update deductions
       partnerExpenses
         .filter((expense) => {
           const expenseDate = new Date(expense.date);
@@ -495,11 +513,9 @@ const Reports = () => {
           const partnerName = expense.partnerName;
           const amount = parseFloat(expense.amount || 0);
 
-          // Deduct amount from profitShares
           if (summary[key].profitShares[partnerName]) {
             summary[key].profitShares[partnerName] -= amount;
 
-            // Ensure deductions field exists and update it
             if (!summary[key].deductions) {
               summary[key].deductions = {};
             }
@@ -522,7 +538,6 @@ const Reports = () => {
         }
       });
 
-
       console.log(`Final Profit Shares for ${key}:`, summary[key].profitShares);
     });
 
@@ -532,6 +547,7 @@ const Reports = () => {
       (a, b) => new Date(a.year, a.month - 1) - new Date(b.year, b.month - 1)
     );
   };
+
 
   const generateCustomerDriverSummary = (trips) => {
     console.log('Trips : ', trips);
@@ -643,7 +659,22 @@ const Reports = () => {
     const summary = {};
 
     expenses.forEach((expense) => {
-      const expenseDate = new Date(expense.date);
+      let expenseDate;
+      // Check if `expense.date` is a Firestore Timestamp
+      if (expense.date?.toDate) {
+        expenseDate = expense.date.toDate(); // Convert Firestore Timestamp to JavaScript Date
+      } else if (typeof expense.date === 'string' || expense.date instanceof String) {
+        expenseDate = new Date(expense.date); // Parse string to Date object
+      } else {
+        expenseDate = new Date(expense.date); // Assume it's already a valid Date or timestamp
+      }
+
+      // Check if the expenseDate is valid
+      if (isNaN(expenseDate.getTime())) {
+        console.warn('Invalid date in expense:', expense);
+        return; // Skip this expense if the date is invalid
+      }
+
       const year = expenseDate.getFullYear();
       const month = String(expenseDate.getMonth() + 1).padStart(2, '0');
       const key = `${year}-${month}`;
@@ -663,6 +694,7 @@ const Reports = () => {
       (a, b) => new Date(a.year, a.month - 1) - new Date(b.year, b.month - 1)
     );
   };
+
 
   const exportToCSV = (data, filename) => {
     if (!data || data.length === 0) {
@@ -775,8 +807,9 @@ const Reports = () => {
                       <th>Driver Rate</th>
                       <th>Driver Wait</th>
                       <th>Driver Total</th>
-                      <th>Expenses</th>
                       <th>Deduction (3%)</th>
+                      <th>Expenses</th>
+
                       <th>Profit</th>
                       {admins.map((admin) => (
                         <th key={admin.id}>{admin.name}</th>
@@ -795,8 +828,8 @@ const Reports = () => {
                         <td>{(row.driverRate || 0).toFixed(2)}</td>
                         <td>{(row.driverWait || 0).toFixed(2)}</td>
                         <td>{(row.driverTotal || 0).toFixed(2)}</td>
-                        <td>{(row.expenses || 0).toFixed(2)}</td>
                         <td>{(row.deduction || 0).toFixed(2)}</td>
+                        <td>{(row.expenses || 0).toFixed(2)}</td>
                         <td>{(row.profit || 0).toFixed(2)}</td>
                         {admins.map((admin) => (
                           <td key={admin.id} data-tooltip-id="admin-tooltip"

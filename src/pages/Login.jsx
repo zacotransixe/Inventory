@@ -2,8 +2,8 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import { FaUser, FaLock } from 'react-icons/fa';
 import { useNavigate } from 'react-router-dom';
-import { signInWithEmailAndPassword } from 'firebase/auth';
-import { auth } from '../firebase';
+import { collection, getDocs, query, where } from 'firebase/firestore';
+import { db } from '../firebase';
 
 const LoginPageContainer = styled.div`
   display: flex;
@@ -97,42 +97,33 @@ const LoginPage = () => {
     setError('');
 
     try {
-      const userCredential = await signInWithEmailAndPassword(auth, email, password);
+      // Query Firestore for the user
+      const usersCollection = collection(db, 'users');
+      const q = query(usersCollection, where('email', '==', email), where('password', '==', password));
+      const querySnapshot = await getDocs(q);
 
-      // Save user details to localStorage
-      const userData = {
-        isLoggedIn: true,
-        userId: userCredential.user.uid,
-        email: userCredential.user.email,
-      };
-      localStorage.setItem('userData', JSON.stringify(userData));
+      if (!querySnapshot.empty) {
+        const userDoc = querySnapshot.docs[0].data();
 
-      // Navigate to the next page
-      navigate('/home', { state: { userId: userCredential.user.uid } });
-    } catch (error) {
-      console.error('Error Code:', error.code);
-      console.error('Error Message:', error.message);
+        // Save user details to localStorage
+        const userData = {
+          isLoggedIn: true,
+          userId: userDoc.id, // Assuming `id` exists in the document
+          email: userDoc.email,
+          role: userDoc.role
+        };
+        localStorage.setItem('userData', JSON.stringify(userData));
 
-      // Handle specific error codes
-      switch (error.code) {
-        case 'auth/invalid-email':
-          setError('Invalid email format.');
-          break;
-        case 'auth/user-not-found':
-          setError('No user found with this email.');
-          break;
-        case 'auth/wrong-password':
-          setError('Incorrect password.');
-          break;
-        case 'auth/too-many-requests':
-          setError('Too many failed attempts. Try again later.');
-          break;
-        default:
-          setError('Failed to sign in. Please check your credentials.');
+        // Navigate to the next page
+        navigate('/home', { state: { userId: userDoc.id } });
+      } else {
+        setError('Invalid email or password.');
       }
+    } catch (error) {
+      console.error('Error during login:', error);
+      setError('Failed to sign in. Please try again later.');
     }
   };
-
 
   return (
     <LoginPageContainer>

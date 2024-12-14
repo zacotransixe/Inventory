@@ -31,6 +31,29 @@ const Heading = styled.h1`
   border-radius: 8px;
 `;
 
+const TabContainer = styled.div`
+  display: flex;
+  border-bottom: 2px solid #ddd;
+  margin-bottom: 2rem;
+`;
+
+const Tab = styled.button`
+  flex: 1;
+  padding: 1rem;
+  font-size: 1.2rem;
+  font-weight: bold;
+  border: none;
+  background-color: ${(props) => (props.active ? '#6a11cb' : '#f9f9f9')};
+  color: ${(props) => (props.active ? 'white' : '#333')};
+  cursor: pointer;
+  transition: background-color 0.3s;
+
+  &:hover {
+    background-color: #6a11cb;
+    color: white;
+  }
+`;
+
 const FormBox = styled.div`
   background-color: #fff;
   padding: 2rem;
@@ -141,6 +164,13 @@ const TableBody = styled.tbody`
 `;
 
 const Admin = () => {
+  const [activeTab, setActiveTab] = useState('PartnerManagement');
+  const [userFormData, setUserFormData] = useState({
+    name: '',
+    email: '',
+    role: 'User',
+    tempPassword: ''
+  });
   const [formData, setFormData] = useState({
     name: '',
     percentage: '',
@@ -148,10 +178,61 @@ const Admin = () => {
     status: 'Active',
     endDate: ''
   });
-  const [tableData, setTableData] = useState([]);
-  const [editingId, setEditingId] = useState(null); // Track the ID being edited
+  const [partnerFormData, setPartnerFormData] = useState({
+    name: '',
+    percentage: '',
+    startDate: '',
+    status: 'Active',
+    endDate: ''
+  });
+
   const collectionRef = collection(db, 'adminData');
 
+  const [editingId, setEditingId] = useState(null); // To track if the form is in edit mode
+
+  const handleAddOrEditUser = async () => {
+    if (editingId) {
+      // Edit existing user
+      const docRef = doc(db, 'users', editingId);
+      await updateDoc(docRef, {
+        name: userFormData.name,
+        email: userFormData.email,
+        role: userFormData.role,
+      });
+      setUsers(
+        users.map((user) =>
+          user.id === editingId ? { ...user, ...userFormData } : user
+        )
+      );
+      alert('User updated successfully.');
+      setEditingId(null); // Exit edit mode
+    } else {
+      // Add new user with temporary password
+      const newUserData = { ...userFormData, password: 'Welcome123' };
+      const newDoc = await addDoc(userCollectionRef, newUserData);
+      setUsers([...users, { ...newUserData, id: newDoc.id }]);
+      alert('User created successfully with temporary password: Welcome123');
+    }
+
+    // Reset form after adding or editing
+    setUserFormData({ name: '', email: '', role: 'User', tempPassword: '' });
+  };
+
+  const handleEditUser = (user) => {
+    setUserFormData({
+      name: user.name,
+      email: user.email,
+      role: user.role,
+    });
+    setEditingId(user.id); // Enter edit mode
+  };
+
+  const handleCancelEdit = () => {
+    setEditingId(null); // Exit edit mode
+    setUserFormData({ name: '', email: '', role: 'User', tempPassword: '' }); // Reset form
+  };
+
+  // Fetch data from Firebase
   useEffect(() => {
     const fetchData = async () => {
       const querySnapshot = await getDocs(collectionRef);
@@ -165,157 +246,298 @@ const Admin = () => {
     fetchData();
   }, []);
 
-  const handleChange = (e) => {
+  const handlePartnerChange = (e) => {
     const { name, value } = e.target;
-    setFormData({ ...formData, [name]: value });
+    setPartnerFormData({ ...partnerFormData, [name]: value });
   };
 
-  const handleAdd = async () => {
-    if (formData.status === 'Inactive' && !formData.endDate) {
+  const [tableData, setTableData] = useState([]);
+
+  const handleEdit = (index) => {
+    const data = tableData[index];
+    setFormData(data);
+    handleDelete(index); // Remove the item temporarily for editing.
+  };
+
+  const handleDelete = (index) => {
+    const updatedData = tableData.filter((_, i) => i !== index);
+    setTableData(updatedData);
+  };
+
+  const [users, setUsers] = useState([]);
+  const [changePasswordData, setChangePasswordData] = useState({
+    email: '',
+    newPassword: ''
+  });
+
+  const partnerCollectionRef = collection(db, 'adminData');
+  const [partners, setPartners] = useState([]);
+
+
+  const userCollectionRef = collection(db, 'users');
+
+  useEffect(() => {
+    const fetchUsers = async () => {
+      const querySnapshot = await getDocs(userCollectionRef);
+      const data = querySnapshot.docs.map((doc) => ({
+        ...doc.data(),
+        id: doc.id
+      }));
+      setUsers(data);
+    };
+
+    fetchUsers();
+  }, []);
+
+  const handleTabSwitch = (tabName) => {
+    setActiveTab(tabName);
+  };
+
+  const handleAddPartner = async () => {
+    if (partnerFormData.status === 'Inactive' && !partnerFormData.endDate) {
       alert('End date is required for inactive status.');
       return;
     }
-    const newDoc = await addDoc(collectionRef, formData);
-    setTableData([...tableData, { ...formData, id: newDoc.id }]);
-    setFormData({ name: '', percentage: '', startDate: '', status: 'Active', endDate: '' });
+    const newDoc = await addDoc(partnerCollectionRef, partnerFormData);
+    setPartners([...partners, { ...partnerFormData, id: newDoc.id }]);
+    setPartnerFormData({ name: '', percentage: '', startDate: '', status: 'Active', endDate: '' });
   };
 
-  const handleEdit = async (id) => {
-    const itemToEdit = tableData.find(item => item.id === id);
-    setFormData(itemToEdit);
-    setEditingId(id); // Set the ID of the item being edited
-  };
 
-  const handleSaveEdit = async () => {
-    if (editingId) {
-      const docRef = doc(db, 'adminData', editingId);
-      await updateDoc(docRef, formData);
-      setTableData(tableData.map(item => (item.id === editingId ? { ...formData, id: editingId } : item)));
-      setFormData({ name: '', percentage: '', startDate: '', status: 'Active', endDate: '' });
-      setEditingId(null); // Clear the editing ID
-    } else {
-      alert("No item selected for editing.");
-    }
-  };
 
-  const handleDelete = async (id) => {
-    const docRef = doc(db, 'adminData', id);
+  const handleDeleteUser = async (id) => {
+    const docRef = doc(db, 'users', id);
     await deleteDoc(docRef);
-    setTableData(tableData.filter(item => item.id !== id));
+    setUsers(users.filter((user) => user.id !== id));
   };
+
+  const handleUserChange = (e) => {
+    const { name, value } = e.target;
+    setUserFormData({ ...userFormData, [name]: value });
+  };
+
+
 
   return (
     <AdminContainer>
       <ContentContainer>
-        <Heading>Admin Dashboard</Heading>
-        <FormBox>
-          <InputRow>
-            <InputField>
-              <label>Name</label>
-              <input
-                type="text"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                placeholder="Enter Name"
-              />
-            </InputField>
-            <InputField>
-              <label>Percentage</label>
-              <input
-                type="number"
-                name="percentage"
-                value={formData.percentage}
-                onChange={handleChange}
-                placeholder="Enter Percentage"
-              />
-            </InputField>
-            <InputField>
-              <label>Start Date</label>
-              <input
-                type="date"
-                name="startDate"
-                value={formData.startDate}
-                onChange={handleChange}
-              />
-            </InputField>
-            <InputField>
-              <label>Status</label>
-              <select
-                name="status"
-                value={formData.status}
-                onChange={handleChange}
-              >
-                <option value="Active">Active</option>
-                <option value="Inactive">Inactive</option>
-              </select>
-            </InputField>
-            {formData.status === 'Inactive' && (
-              <InputField>
-                <label>End Date</label>
-                <input
-                  type="date"
-                  name="endDate"
-                  value={formData.endDate}
-                  onChange={handleChange}
-                />
-              </InputField>
-            )}
-          </InputRow>
-          {!editingId ? (
-            <StyledButton variant="add" onClick={handleAdd}>
-              Add
-            </StyledButton>
-          ) : (
-            <StyledButton variant="edit" onClick={handleSaveEdit}>
-              Save Edit
-            </StyledButton>
-          )}
-        </FormBox>
+        <TabContainer>
+          <Tab active={activeTab === 'PartnerManagement'} onClick={() => handleTabSwitch('PartnerManagement')}>
+            Partner Management
+          </Tab>
+          <Tab active={activeTab === 'UserManagement'} onClick={() => handleTabSwitch('UserManagement')}>
+            User Management
+          </Tab>
 
-        <TableContainer>
-          <Table>
-            <TableHeader>
-              <tr>
-                <th>Name</th>
-                <th>Percentage</th>
-                <th>Start Date</th>
-                <th>Status</th>
-                <th>End Date</th>
-                <th>Actions</th>
-              </tr>
-            </TableHeader>
-            <TableBody>
-              {tableData.map((item) => (
-                <tr key={item.id}>
-                  <td>{item.name}</td>
-                  <td>{item.percentage}</td>
-                  <td>{item.startDate}</td>
-                  <td>{item.status}</td>
-                  <td>{item.status === 'Inactive' ? item.endDate : '-'}</td>
-                  <td>
-                    <StyledButton
-                      variant="edit"
-                      onClick={() => handleEdit(item.id)}
-                    >
-                      Edit
-                    </StyledButton>
-                    <StyledButton
-                      variant="delete"
-                      onClick={() => handleDelete(item.id)}
-                    >
-                      Delete
-                    </StyledButton>
-                  </td>
-                </tr>
-              ))}
-            </TableBody>
-          </Table>
-        </TableContainer>
+        </TabContainer>
+
+        {activeTab === 'PartnerManagement' && (
+          <>
+            <FormBox>
+              {/* Partner Management Form */}
+              <InputRow>
+                <InputField>
+                  <label>Name</label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={partnerFormData.name}
+                    onChange={handlePartnerChange}
+                    placeholder="Enter Name"
+                  />
+                </InputField>
+                <InputField>
+                  <label>Percentage</label>
+                  <input
+                    type="number"
+                    name="percentage"
+                    value={partnerFormData.percentage}
+                    onChange={handlePartnerChange}
+                    placeholder="Enter Percentage"
+                  />
+                </InputField>
+                <InputField>
+                  <label>Start Date</label>
+                  <input
+                    type="date"
+                    name="startDate"
+                    value={partnerFormData.startDate}
+                    onChange={handlePartnerChange}
+                  />
+                </InputField>
+                <InputField>
+                  <label>Status</label>
+                  <select
+                    name="status"
+                    value={partnerFormData.status}
+                    onChange={handlePartnerChange}
+                  >
+                    <option value="Active">Active</option>
+                    <option value="Inactive">Inactive</option>
+                  </select>
+                </InputField>
+                {partnerFormData.status === 'Inactive' && (
+                  <InputField>
+                    <label>End Date</label>
+                    <input
+                      type="date"
+                      name="endDate"
+                      value={partnerFormData.endDate}
+                      onChange={handlePartnerChange}
+                    />
+                  </InputField>
+                )}
+              </InputRow>
+              <StyledButton variant="add" onClick={handleAddPartner}>
+                Add Partner
+              </StyledButton>
+            </FormBox>
+
+            <TableContainer>
+              <Table>
+                <TableHeader>
+                  <tr>
+                    <th>Name</th>
+                    <th>Percentage</th>
+                    <th>Start Date</th>
+                    <th>Status</th>
+                    <th>End Date</th>
+                    <th>Actions</th>
+                  </tr>
+                </TableHeader>
+                <TableBody>
+                  {tableData.map((item) => (
+                    <tr key={item.id}>
+                      <td>{item.name}</td>
+                      <td>{item.percentage}</td>
+                      <td>{item.startDate}</td>
+                      <td>{item.status}</td>
+                      <td>{item.status === 'Inactive' ? item.endDate : '-'}</td>
+                      <td>
+                        <StyledButton
+                          variant="edit"
+                          onClick={() => handleEdit(item.id)}
+                        >
+                          Edit
+                        </StyledButton>
+                        <StyledButton
+                          variant="delete"
+                          onClick={() => handleDelete(item.id)}
+                        >
+                          Delete
+                        </StyledButton>
+                      </td>
+                    </tr>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+
+          </>
+        )}
+
+        {activeTab === 'UserManagement' && (
+          <>
+            <FormBox>
+              <InputRow>
+                <InputField>
+                  <label>Name</label>
+                  <input
+                    type="text"
+                    name="name"
+                    value={userFormData.name}
+                    onChange={handleUserChange}
+                    placeholder="Enter Name"
+                  />
+                </InputField>
+                <InputField>
+                  <label>Email</label>
+                  <input
+                    type="email"
+                    name="email"
+                    value={userFormData.email}
+                    onChange={handleUserChange}
+                    placeholder="Enter Email"
+                  />
+                </InputField>
+                <InputField>
+                  <label>Role</label>
+                  <select
+                    name="role"
+                    value={userFormData.role}
+                    onChange={handleUserChange}
+                  >
+                    <option value="User">User</option>
+                    <option value="Accountant">Accountant</option>
+                    <option value="Admin">Admin</option>
+
+                  </select>
+                </InputField>
+              </InputRow>
+
+              {/* Show "Add" or "Save" button based on mode */}
+              {!editingId ? (
+                <StyledButton variant="add" onClick={handleAddOrEditUser}>
+                  Add User
+                </StyledButton>
+              ) : (
+                <>
+                  <StyledButton variant="edit" onClick={handleAddOrEditUser}>
+                    Save
+                  </StyledButton>
+                  <StyledButton variant="delete" onClick={handleCancelEdit}>
+                    Cancel
+                  </StyledButton>
+                </>
+              )}
+            </FormBox>
+
+            <TableContainer>
+              <Table>
+                <TableHeader>
+                  <tr>
+                    <th>Name</th>
+                    <th>Email</th>
+                    <th>Role</th>
+                    <th>Actions</th>
+                  </tr>
+                </TableHeader>
+                <TableBody>
+                  {users.map((user) => (
+                    <tr key={user.id}>
+                      <td>{user.name}</td>
+                      <td>{user.email}</td>
+                      <td>{user.role}</td>
+                      <td>
+                        {/* Edit button */}
+                        <StyledButton
+                          variant="edit"
+                          onClick={() => handleEditUser(user)}
+                        >
+                          Edit
+                        </StyledButton>
+
+                        {/* Delete button */}
+                        <StyledButton
+                          variant="delete"
+                          onClick={() => handleDeleteUser(user.id)}
+                        >
+                          Delete
+                        </StyledButton>
+                      </td>
+                    </tr>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
+
+
+          </>
+        )}
+
       </ContentContainer>
     </AdminContainer>
   );
 };
 
 export default Admin;
-
