@@ -268,9 +268,13 @@ const Admin = () => {
 
 
   const handleDelete = async (id) => {
-    const docRef = doc(db, 'adminData', id);
-    await deleteDoc(docRef);
-    setTableData(tableData.filter(item => item.id !== id));
+    const confirmDelete = window.confirm('Are you sure you want to delete this partner?');
+    if (confirmDelete) {
+      const docRef = doc(db, 'adminData', id);
+      await deleteDoc(docRef);
+      setTableData(tableData.filter(item => item.id !== id));
+      alert('Partner deleted successfully.');
+    }
   };
 
   const [users, setUsers] = useState([]);
@@ -312,12 +316,14 @@ const Admin = () => {
     setPartnerFormData({ name: '', percentage: '', startDate: '', status: 'Active', endDate: '' });
   };
 
-
-
   const handleDeleteUser = async (id) => {
-    const docRef = doc(db, 'users', id);
-    await deleteDoc(docRef);
-    setUsers(users.filter((user) => user.id !== id));
+    const confirmDelete = window.confirm('Are you sure you want to delete this user?');
+    if (confirmDelete) {
+      const docRef = doc(db, 'users', id);
+      await deleteDoc(docRef);
+      setUsers(users.filter((user) => user.id !== id));
+      alert('User deleted successfully.');
+    }
   };
 
   const handleUserChange = (e) => {
