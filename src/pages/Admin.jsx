@@ -171,13 +171,7 @@ const Admin = () => {
     role: 'User',
     tempPassword: ''
   });
-  const [formData, setFormData] = useState({
-    name: '',
-    percentage: '',
-    startDate: '',
-    status: 'Active',
-    endDate: ''
-  });
+
   const [partnerFormData, setPartnerFormData] = useState({
     name: '',
     percentage: '',
@@ -253,15 +247,30 @@ const Admin = () => {
 
   const [tableData, setTableData] = useState([]);
 
-  const handleEdit = (index) => {
-    const data = tableData[index];
-    setFormData(data);
-    handleDelete(index); // Remove the item temporarily for editing.
+  const handleEdit = async (id) => {
+    // Fetch the current data for the item to pre-fill the form
+    const itemToEdit = tableData.find(item => item.id === id);
+    setPartnerFormData(itemToEdit);
+    setEditingId(id); // Store the ID of the item being edited
   };
 
-  const handleDelete = (index) => {
-    const updatedData = tableData.filter((_, i) => i !== index);
-    setTableData(updatedData);
+  const handleSaveEdit = async () => {
+    if (editingId) {
+      const docRef = doc(db, 'adminData', editingId);
+      await updateDoc(docRef, partnerFormData); // Save updated data to Firebase
+      setTableData(tableData.map(item => (item.id === editingId ? { ...partnerFormData, id: editingId } : item)));
+      setPartnerFormData({ name: '', percentage: '', startDate: '', status: 'Active', endDate: '' });
+      setEditingId(null); // Clear the editing ID
+    } else {
+      alert("No item selected for editing.");
+    }
+  };
+
+
+  const handleDelete = async (id) => {
+    const docRef = doc(db, 'adminData', id);
+    await deleteDoc(docRef);
+    setTableData(tableData.filter(item => item.id !== id));
   };
 
   const [users, setUsers] = useState([]);
@@ -314,6 +323,16 @@ const Admin = () => {
   const handleUserChange = (e) => {
     const { name, value } = e.target;
     setUserFormData({ ...userFormData, [name]: value });
+  };
+
+  const handleAdd = async () => {
+    if (partnerFormData.status === 'Inactive' && !partnerFormData.endDate) {
+      alert('End date is required for inactive status.');
+      return;
+    }
+    const newDoc = await addDoc(collectionRef, partnerFormData);
+    setTableData([...tableData, { ...partnerFormData, id: newDoc.id }]);
+    setPartnerFormData({ name: '', percentage: '', startDate: '', status: 'Active', endDate: '' });
   };
 
 
@@ -388,9 +407,11 @@ const Admin = () => {
                   </InputField>
                 )}
               </InputRow>
-              <StyledButton variant="add" onClick={handleAddPartner}>
-                Add Partner
-              </StyledButton>
+              {!editingId ? (
+                <StyledButton onClick={handleAdd}>Add</StyledButton>
+              ) : (
+                <StyledButton onClick={handleSaveEdit}>Save Edit</StyledButton>
+              )}
             </FormBox>
 
             <TableContainer>

@@ -250,6 +250,7 @@ const Reports = () => {
   const [customerWiseReport, setCustomerWiseReport] = useState([]);
   const [monthlyExpenses, setMonthlyExpenses] = useState([]);
   const [loadToOffloadReport, setLoadToOffloadReport] = useState([]);
+  const [firstLoadOffloadSummary, setFirstLoadOffloadSummary] = useState([]); // New state
 
   const [admins, setAdmins] = useState([]); // Add this to store admin data
 
@@ -313,6 +314,8 @@ const Reports = () => {
       const monthlyExpensesSummary = generateMonthlyExpenses(expensesData);
       setMonthlyExpenses(monthlyExpensesSummary);
 
+      const firstLoadOffloadData = generateFirstLoadOffloadSummary(tripsData); // Generate new data
+      setFirstLoadOffloadSummary(firstLoadOffloadData);
 
       setLoading(false);
     } catch (error) {
@@ -548,7 +551,6 @@ const Reports = () => {
     );
   };
 
-
   const generateCustomerDriverSummary = (trips) => {
     console.log('Trips : ', trips);
     if (!trips || trips.length === 0) {
@@ -695,6 +697,49 @@ const Reports = () => {
     );
   };
 
+  // New Function: Generate First Load-Offload Summary
+  const generateFirstLoadOffloadSummary = (trips) => {
+    const summary = {};
+
+    trips.forEach((trip) => {
+      const tripDate = new Date(trip.tripDate);
+      const year = tripDate.getFullYear();
+      const month = String(tripDate.getMonth() + 1).padStart(2, '0');
+      const key = `${year}-${month}`;
+
+      const combination = `${trip.firstLoading || 'Unknown'} - ${trip.firstOffloading || 'Unknown'}`;
+
+      if (!summary[key]) {
+        summary[key] = {};
+      }
+
+      if (!summary[key][combination]) {
+        summary[key][combination] = 0;
+      }
+
+      summary[key][combination] += 1;
+    });
+
+    return Object.entries(summary).map(([month, combinations]) => ({
+      month,
+      combinations: Object.entries(combinations).map(([combination, count]) => ({
+        combination,
+        count,
+      })),
+    }));
+  };
+
+  const exportFirstLoadOffloadSummary = () => {
+    const csvData = firstLoadOffloadSummary.flatMap((entry) =>
+      entry.combinations.map((combo) => ({
+        Month: entry.month,
+        Combination: combo.combination,
+        Count: combo.count,
+      }))
+    );
+
+    exportToCSV(csvData, 'FirstLoadOffloadSummary.csv');
+  };
 
   const exportToCSV = (data, filename) => {
     if (!data || data.length === 0) {
@@ -752,6 +797,9 @@ const Reports = () => {
           </Tab>
           <Tab active={activeTab === 3} onClick={() => setActiveTab(3)}>
             Monthly Expenses
+          </Tab>
+          <Tab active={activeTab === 4} onClick={() => setActiveTab(4)}>
+            First Load-Offload Summary
           </Tab>
         </TabsContainer>
 
@@ -1018,6 +1066,39 @@ const Reports = () => {
                     ))}
                   </tbody>
                 </MonthlyExpensesTable>
+              </TableContainer>
+            )}
+            {activeTab === 4 && (
+              <TableContainer>
+                <HeaderTitle>First Load-Offload Summary
+                  <ExportButtonContainer>
+                    <ExportButton onClick={exportFirstLoadOffloadSummary}>
+                      Export to CSV
+                    </ExportButton>
+                  </ExportButtonContainer>
+                </HeaderTitle>
+                <Table>
+                  <thead>
+                    <tr>
+                      <th>Month</th>
+                      <th>Combination</th>
+                      <th>Count</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {firstLoadOffloadSummary.map((entry, index) => (
+                      <React.Fragment key={index}>
+                        {entry.combinations.map((combo, idx) => (
+                          <tr key={`${index}-${idx}`}>
+                            <td>{idx === 0 ? entry.month : ''}</td>
+                            <td>{combo.combination}</td>
+                            <td>{combo.count}</td>
+                          </tr>
+                        ))}
+                      </React.Fragment>
+                    ))}
+                  </tbody>
+                </Table>
               </TableContainer>
             )}
           </>
