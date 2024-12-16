@@ -10,6 +10,14 @@ import Papa from 'papaparse';
 import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
 import { Timestamp, deleteDoc } from 'firebase/firestore';
 
+const Heading = styled.h1`
+  font-size: 2rem;
+  font-weight: bold;
+  text-align: center;
+  color: #343a40;
+  margin-bottom: 1.5rem;
+`;
+
 // Styled Components
 const DashboardContainer = styled.div`
   display: flex;
@@ -178,6 +186,8 @@ const Dashboard = () => {
   const [searchData, setSearchData] = useState({ fromDate: '', toDate: '' });
   const [loggedIn, setLoggedIn] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
+  const [userRole, setUserRole] = useState(''); // Add state for user role
+
   const recordsPerPage = 5;
 
   const initialFormData = {
@@ -235,6 +245,8 @@ const Dashboard = () => {
   useEffect(() => {
     const userData = JSON.parse(localStorage.getItem('userData'));
     setLoggedIn(userData?.isLoggedIn || false);
+    setUserRole(userData?.role || ''); // Assuming `role` is stored in the user data
+
   }, []);
 
   const openNewTab = () => {
@@ -399,6 +411,8 @@ const Dashboard = () => {
     <DashboardContainer>
 
       <ContentContainer>
+        <Heading>Trip Information</Heading>
+
         <SearchBar>
           <InputWrapper>
             <InputLabel>Start Date</InputLabel>
@@ -413,7 +427,9 @@ const Dashboard = () => {
             {loggedIn && (
               <>
                 <Button color="#343a40" onClick={handleExport}><FaFileExport /> Export</Button>
-                <Button color="#28a745" onClick={openNewTab}><FaPlus /> Add New</Button>
+                {userRole !== 'User' && (
+                  <Button color="#28a745" onClick={openNewTab}><FaPlus /> Add New</Button>
+                )}
               </>
             )}
           </ButtonGroup>
