@@ -192,6 +192,14 @@ const Expenses = () => {
   const [loading, setLoading] = useState(false);
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
+  const [userRole, setUserRole] = useState(''); // State to store user role
+
+  useEffect(() => {
+    // Fetch user role from localStorage or context
+    const userData = JSON.parse(localStorage.getItem('userData'));
+    setUserRole(userData?.role || 'User'); // Default role is 'User'
+    fetchExpenses();
+  }, []);
 
   const fetchExpenses = async () => {
     setLoading(true);
@@ -279,9 +287,11 @@ const Expenses = () => {
       <ContentContainer>
         <Header>
           <Title>Expenses</Title>
-          <StylishButton onClick={handleAddExpense}>
-            <FaPlus /> Add Expense
-          </StylishButton>
+          {userRole !== 'User' && ( // Hide Add Expense button for 'User'
+            <StylishButton onClick={handleAddExpense}>
+              <FaPlus /> Add Expense
+            </StylishButton>
+          )}
         </Header>
 
         <SearchBar>
@@ -316,7 +326,9 @@ const Expenses = () => {
                   <StyledTableHeader>Title</StyledTableHeader>
                   <StyledTableHeader>Amount</StyledTableHeader>
                   <StyledTableHeader>Date</StyledTableHeader>
-                  <StyledTableHeader>Actions</StyledTableHeader>
+                  {userRole !== 'User' && (
+                    <StyledTableHeader>Actions</StyledTableHeader>
+                  )}
                 </StyledTableRow>
               </StyledTableHead>
               <tbody>
@@ -325,16 +337,20 @@ const Expenses = () => {
                     <StyledTableCell>{expense.title}</StyledTableCell>
                     <StyledTableCell>{expense.amount}</StyledTableCell>
                     <StyledTableCell>{expense.date}</StyledTableCell>
-                    <StyledTableCell>
-                      <ActionButtons>
-                        <EditButton onClick={() => handleEditExpense(expense)}>
-                          <FaEdit /> Edit
-                        </EditButton>
-                        <DeleteButton onClick={() => handleDeleteExpense(expense.id)}>
-                          <FaTrashAlt /> Delete
-                        </DeleteButton>
-                      </ActionButtons>
-                    </StyledTableCell>
+                    {userRole !== 'User' && ( // Hide Edit/Delete buttons for 'User'
+                      <StyledTableCell>
+                        <ActionButtons>
+                          <EditButton onClick={() => handleEditExpense(expense)}>
+                            <FaEdit /> Edit
+                          </EditButton>
+                          <DeleteButton
+                            onClick={() => handleDeleteExpense(expense.id)}
+                          >
+                            <FaTrashAlt /> Delete
+                          </DeleteButton>
+                        </ActionButtons>
+                      </StyledTableCell>
+                    )}
                   </StyledTableRow>
                 ))}
               </tbody>

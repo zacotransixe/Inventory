@@ -499,34 +499,39 @@ const Dashboard = () => {
                         <TableCell>{result.remarks}</TableCell>
                         <TableCell>{result.created}</TableCell>
                         <TableCell>
-                          <button
-                            style={{
-                              padding: '5px 10px',
-                              marginRight: '5px',
-                              backgroundColor: '#007bff',
-                              color: '#fff',
-                              border: 'none',
-                              borderRadius: '3px',
-                              cursor: 'pointer',
-                            }}
-                            onClick={() => handleEdit(result)}
-                          >
-                            Edit
-                          </button>
-                          <button
-                            style={{
-                              padding: '5px 10px',
-                              backgroundColor: '#dc3545',
-                              color: '#fff',
-                              border: 'none',
-                              borderRadius: '3px',
-                              cursor: 'pointer',
-                            }}
-                            onClick={() => handleDelete(result.id)}
-                          >
-                            Delete
-                          </button>
+                          {userRole !== 'User' && ( // Only show buttons if the role is not 'User'
+                            <>
+                              <button
+                                style={{
+                                  padding: '5px 10px',
+                                  marginRight: '5px',
+                                  backgroundColor: '#007bff',
+                                  color: '#fff',
+                                  border: 'none',
+                                  borderRadius: '3px',
+                                  cursor: 'pointer',
+                                }}
+                                onClick={() => handleEdit(result)}
+                              >
+                                Edit
+                              </button>
+                              <button
+                                style={{
+                                  padding: '5px 10px',
+                                  backgroundColor: '#dc3545',
+                                  color: '#fff',
+                                  border: 'none',
+                                  borderRadius: '3px',
+                                  cursor: 'pointer',
+                                }}
+                                onClick={() => handleDelete(result.id)}
+                              >
+                                Delete
+                              </button>
+                            </>
+                          )}
                         </TableCell>
+
                       </TableRow>
                     ))}
                   </StyledTableBody>

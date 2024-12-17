@@ -193,6 +193,9 @@ const Sidebar = () => {
             <li>
               <StyledAnchor href="/trips" target="_blank" rel="noopener noreferrer">Trips</StyledAnchor>
             </li>
+            <li>
+              <StyledAnchor href="/expenses" target="_blank" rel="noopener noreferrer">Expenses</StyledAnchor>
+            </li>
           </>
         )}
         <li>
