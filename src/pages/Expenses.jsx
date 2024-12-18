@@ -31,6 +31,7 @@ const Header = styled.div`
 `;
 
 const Title = styled.h1`
+font-family: Aptos Display;
   font-size: 1.5rem;
   font-weight: bold;
   color: #333;
@@ -39,12 +40,12 @@ const Title = styled.h1`
 
 const StylishButton = styled.button`
   padding: 0.75rem 1.5rem;
-  background-color: #3498db; /* Primary blue */
+  background-color: #002985; /* Primary blue */
   color: white;
-  font-size: 1rem;
-  font-weight: bold;
+font-family: Aptos Display;
+font-size:18px;  font-weight: bold;
   border: none;
-  border-radius: 8px;
+    border-radius: 5px;
   cursor: pointer;
   transition: background-color 0.3s ease, transform 0.2s ease;
 
@@ -77,6 +78,8 @@ const Input = styled.input`
   border-radius: 8px;
   width: 200px;
   outline: none;
+  font-family: Aptos Display;
+font-size:16px;
 `;
 
 const TableContainer = styled.div`
@@ -94,7 +97,7 @@ const StyledTable = styled.table`
 `;
 
 const StyledTableHead = styled.thead`
-  background-color: #007bff;
+  background-color: #002985;
   color: #fff;
 `;
 
@@ -103,9 +106,6 @@ const StyledTableRow = styled.tr`
     background-color: #f9f9f9;
   }
 
-  &:hover {
-    background-color: #e9ecef;
-  }
 `;
 
 const StyledTableHeader = styled.th`
@@ -113,12 +113,14 @@ const StyledTableHeader = styled.th`
   text-align: left;
   font-weight: 600;
   font-size: 1rem;
+  font-family: Aptos Display;
   text-transform: uppercase;
 `;
 
 const StyledTableCell = styled.td`
   padding: 0.75rem;
   text-align: left;
+  font-family: Aptos Display;
   font-size: 1rem;
   color: #333;
   border-bottom: 1px solid #ddd;
@@ -130,10 +132,10 @@ const ActionButtons = styled.div`
 `;
 
 const EditButton = styled(StylishButton)`
-  background-color: #f39c12;
+  background-color: #002985;
 
   &:hover {
-    background-color: #e67e22;
+    background-color: #002985;
   }
 `;
 

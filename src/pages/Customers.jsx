@@ -38,7 +38,7 @@ const Title = styled.h1`
 
 const StylishButton = styled.button`
   padding: 0.75rem 1.5rem;
-  background-color: #3498db; /* Primary blue */
+  background-color: #002985; /* Primary blue */
   color: white;
   font-size: 1rem;
   font-weight: bold;
@@ -47,20 +47,15 @@ const StylishButton = styled.button`
   cursor: pointer;
   transition: background-color 0.3s ease, transform 0.2s ease;
 
-  &:hover {
-    background-color: #2980b9; /* Darker blue on hover */
-    transform: translateY(-3px);
-  }
 
   &:focus {
     outline: none;
-    box-shadow: 0 0 4px #3498db;
+    box-shadow: 0 0 4px #002985;
   }
 `;
 
 const TableContainer = styled.div`
   background-color: #fff;
-  border-radius: 10px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   overflow-x: auto;
 `;
@@ -68,22 +63,17 @@ const TableContainer = styled.div`
 const StyledTable = styled.table`
   width: 100%;
   border-collapse: collapse;
-  border-radius: 10px;
   overflow: hidden;
 `;
 
 const StyledTableHead = styled.thead`
-  background-color: #007bff;
+  background-color: #002985;
   color: #fff;
 `;
 
 const StyledTableRow = styled.tr`
   &:nth-child(even) {
     background-color: #f9f9f9;
-  }
-
-  &:hover {
-    background-color: #e9ecef;
   }
 `;
 
@@ -109,10 +99,10 @@ const ActionButtons = styled.div`
 `;
 
 const EditButton = styled(StylishButton)`
-  background-color: #f39c12;
+  background-color: #002985;
 
   &:hover {
-    background-color: #e67e22;
+    background-color: #002985;
   }
 `;
 
@@ -133,7 +123,7 @@ const LoaderContainer = styled.div`
 
 const Loader = styled.div`
   border: 4px solid #f3f3f3;
-  border-top: 4px solid #3498db;
+  border-top: 4px solid #002985;
   border-radius: 50%;
   width: 40px;
   height: 40px;

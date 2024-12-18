@@ -39,22 +39,6 @@ const Title = styled.h1`
   margin: 0;
 `;
 
-const StylishButton = styled.button`
-  padding: 0.75rem 1.5rem;
-  background-color: #3498db;
-  color: white;
-  font-size: 1rem;
-  font-weight: bold;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  transition: background-color 0.3s ease, transform 0.2s ease;
-
-  &:hover {
-    background-color: #2980b9;
-    transform: translateY(-3px);
-  }
-`;
 
 const FormContainer = styled.div`
   background-color: #fff;
@@ -101,7 +85,6 @@ const InputField = styled.div`
 
 const TableContainer = styled.div`
   background-color: #fff;
-  border-radius: 10px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
   overflow-x: auto;
 `;
@@ -109,12 +92,11 @@ const TableContainer = styled.div`
 const StyledTable = styled.table`
   width: 100%;
   border-collapse: collapse;
-  border-radius: 10px;
   overflow: hidden;
 `;
 
 const StyledTableHead = styled.thead`
-  background-color: #007bff;
+  background-color: #002985;
   color: #fff;
 
   th {
@@ -130,9 +112,6 @@ const StyledTableRow = styled.tr`
     background-color: #f9f9f9;
   }
 
-  &:hover {
-    background-color: #e9ecef;
-  }
 `;
 
 const StyledTableCell = styled.td`
@@ -143,26 +122,45 @@ const StyledTableCell = styled.td`
   border-bottom: 1px solid #ddd;
 `;
 
-const ActionButton = styled.button`
-  padding: 0.5rem 1rem;
-  font-size: 0.9rem;
+const StylishButton = styled.button`
+  background-color: #002985;
+  color: white;
+  font-size: 1rem;
   font-weight: bold;
   border: none;
   border-radius: 8px;
-  background-color: #e74c3c;
-  color: white;
+  padding: 8px 16px; /* Consistent padding for height */
+  min-height: 40px; /* Ensures consistent height */
+  display: flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
-  transition: transform 0.2s;
+  transition: background-color 0.3s ease, transform 0.2s ease;
 
   &:hover {
-    background-color: #c0392b;
-    transform: scale(1.05);
+    transform: translateY(-2px);
   }
 `;
+
+const EditButton = styled(StylishButton)`
+  background-color: #002985;
+`;
+
+const DeleteButton = styled(StylishButton)`
+  background-color: #e74c3c;
+  &:hover {
+    background-color: #c0392b;
+  }
+`;
+
 const ActionButtons = styled.div`
   display: flex;
-  gap: 10px; /* Add space between buttons */
+  gap: 8px; /* Space between buttons */
+  align-items: center; /* Align buttons vertically */
 `;
+
+
+
 
 
 const PRT = () => {
@@ -361,12 +359,12 @@ const PRT = () => {
                   <StyledTableCell>{entry.comment}</StyledTableCell>
                   <StyledTableCell>
                     <ActionButtons>
-                      <ActionButton onClick={() => handleEdit(entry)}>
+                      <EditButton onClick={() => handleEdit(entry)}>
                         <FaEdit /> Edit
-                      </ActionButton>
-                      <ActionButton onClick={() => handleDelete(entry.id)}>
+                      </EditButton>
+                      <DeleteButton onClick={() => handleDelete(entry.id)}>
                         <FaTrashAlt /> Delete
-                      </ActionButton>
+                      </DeleteButton>
                     </ActionButtons>
                   </StyledTableCell>
 

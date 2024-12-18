@@ -38,16 +38,14 @@ const Input = styled.input`
 const Button = styled.button`
   width: 100%;
   padding: 10px;
-  background-color: #28a745;
+  background-color: #002985;
   color: #fff;
   border: none;
   border-radius: 5px;
   font-size: 16px;
   cursor: pointer;
 
-  &:hover {
-    background-color: #218838;
-  }
+  
 `;
 
 const ErrorMessage = styled.div`
@@ -61,71 +59,71 @@ const SuccessMessage = styled.div`
 `;
 
 const ChangePassword = () => {
-    const [currentPassword, setCurrentPassword] = useState('');
-    const [newPassword, setNewPassword] = useState('');
-    const [confirmPassword, setConfirmPassword] = useState('');
-    const [error, setError] = useState('');
-    const [success, setSuccess] = useState('');
+  const [currentPassword, setCurrentPassword] = useState('');
+  const [newPassword, setNewPassword] = useState('');
+  const [confirmPassword, setConfirmPassword] = useState('');
+  const [error, setError] = useState('');
+  const [success, setSuccess] = useState('');
 
-    const handleChangePassword = async (e) => {
-        e.preventDefault();
-        setError('');
-        setSuccess('');
+  const handleChangePassword = async (e) => {
+    e.preventDefault();
+    setError('');
+    setSuccess('');
 
-        if (newPassword !== confirmPassword) {
-            setError('Passwords do not match.');
-            return;
-        }
+    if (newPassword !== confirmPassword) {
+      setError('Passwords do not match.');
+      return;
+    }
 
-        try {
-            // Simulate user ID retrieval (update based on your logic)
-            const userId = JSON.parse(localStorage.getItem('userData')).userId;
-            const userDocRef = doc(db, 'users', userId);
+    try {
+      // Simulate user ID retrieval (update based on your logic)
+      const userId = JSON.parse(localStorage.getItem('userData')).userId;
+      const userDocRef = doc(db, 'users', userId);
 
-            // Update password in Firestore
-            await updateDoc(userDocRef, { password: newPassword });
+      // Update password in Firestore
+      await updateDoc(userDocRef, { password: newPassword });
 
-            setSuccess('Password updated successfully!');
-            setCurrentPassword('');
-            setNewPassword('');
-            setConfirmPassword('');
-        } catch (err) {
-            console.error(err);
-            setError('Failed to update password. Please try again.');
-        }
-    };
+      setSuccess('Password updated successfully!');
+      setCurrentPassword('');
+      setNewPassword('');
+      setConfirmPassword('');
+    } catch (err) {
+      console.error(err);
+      setError('Failed to update password. Please try again.');
+    }
+  };
 
-    return (
-        <Container>
-            <Form onSubmit={handleChangePassword}>
-                <Heading>Change Password</Heading>
-                {error && <ErrorMessage>{error}</ErrorMessage>}
-                {success && <SuccessMessage>{success}</SuccessMessage>}
-                <Input
-                    type="password"
-                    placeholder="Current Password"
-                    value={currentPassword}
-                    onChange={(e) => setCurrentPassword(e.target.value)}
-                    required
-                />
-                <Input
-                    type="password"
-                    placeholder="New Password"
-                    value={newPassword}
-                    onChange={(e) => setNewPassword(e.target.value)}
-                    required
-                />
-                <Input
-                    type="password"
-                    placeholder="Confirm New Password"
-                    value={confirmPassword}
-                    onChange={(e) => setConfirmPassword(e.target.value)}
-                    required
-                />
-                <Button type="submit">Update Password</Button>
-            </Form>
-        </Container>
-    );
+  return (
+    <Container>
+      <Form onSubmit={handleChangePassword}>
+        <Heading>Change Password</Heading>
+        {error && <ErrorMessage>{error}</ErrorMessage>}
+        {success && <SuccessMessage>{success}</SuccessMessage>}
+        <Input
+          type="password"
+          placeholder="Current Password"
+          value={currentPassword}
+          onChange={(e) => setCurrentPassword(e.target.value)}
+          required
+        />
+        <Input
+          type="password"
+          placeholder="New Password"
+          value={newPassword}
+          onChange={(e) => setNewPassword(e.target.value)}
+          required
+        />
+        <Input
+          type="password"
+          placeholder="Confirm New Password"
+          value={confirmPassword}
+          onChange={(e) => setConfirmPassword(e.target.value)}
+          required
+        />
+        <Button type="submit">Update Password</Button>
+      </Form>
+    </Container>
+  );
 };
 
 export default ChangePassword;

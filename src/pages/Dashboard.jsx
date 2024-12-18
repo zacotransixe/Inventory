@@ -1,28 +1,31 @@
 import React, { useState, useEffect } from 'react';
 import styled from 'styled-components';
-import { FaSearch, FaFileExport, FaPlus, FaTimes } from 'react-icons/fa';
+import { FaSearch, FaFileExport, FaPlus } from 'react-icons/fa';
 import Button from '../components/Button';
-import { db, auth } from '../firebase';
-import { collection, query, where, getDocs, addDoc, doc, setDoc } from 'firebase/firestore';
+import { db } from '../firebase';
+import { collection, query, where, getDocs, doc } from 'firebase/firestore';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import Papa from 'papaparse';
-import { Table, TableBody, TableCell, TableContainer, TableHead, TableRow, Paper } from '@mui/material';
-import { Timestamp, deleteDoc } from 'firebase/firestore';
+import { Table, TableBody, TableCell, TableHead, TableRow } from '@mui/material';
+import { deleteDoc } from 'firebase/firestore';
 
 const Heading = styled.h1`
-  font-size: 2rem;
   font-weight: bold;
   text-align: center;
   color: #343a40;
   margin-bottom: 1.5rem;
+  font-family: Aptos Display;
+font-size:32px;
 `;
 
 // Styled Components
 const DashboardContainer = styled.div`
   display: flex;
   min-height: 100vh;
-  background-color: #f9f9f9;
+  background-color: #fff;
+font-family: Aptos Display;
+font-size:16px;
 `;
 
 const ContentContainer = styled.div`
@@ -52,7 +55,8 @@ const SearchBar = styled.div`
 
 const Input = styled.input`
   padding: 0.5rem;
-  font-size: 14px;
+    font-family: Aptos Display;
+  font-size: 16px;
   border: 1px solid #ccc;
   border-radius: 5px;
   outline: none;
@@ -65,11 +69,15 @@ const Input = styled.input`
 const InputWrapper = styled.div`
   display: flex;
   flex-direction: column;
+  
 `;
 
 const InputLabel = styled.label`
   font-weight: bold;
+    font-family: Aptos Display;
+
   margin-bottom: 5px;
+    font-size: 16px;
 `;
 
 const ButtonGroup = styled.div`
@@ -90,7 +98,6 @@ const RightSideContainer = styled.div`
 const TableWrapper = styled.div`
   width: 100%; /* Make the table wrapper take full width */
     max-width: 100%; /* Prevent the wrapper from exceeding the screen width */
-
   overflow-x: auto; /* Add horizontal scroll if table exceeds screen width */
   margin-top: 20px;
   margin-left: auto;
@@ -101,7 +108,6 @@ const TableWrapper = styled.div`
 
 const StyledTable = styled(Table)`
   width: 100%; /* Ensure the table fits within its container */
-
   border-collapse: collapse;
   background-color: white;
   box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
@@ -114,9 +120,10 @@ const StyledTableHead = styled(TableHead)`
 
   th {
     padding: 12px;
+      font-family: Aptos Display;
+font-size:16px;
     text-align: left;
     color: #fff;
-    font-weight: bold;
     position: sticky;
     top: 0;
     z-index: 1;
@@ -136,6 +143,9 @@ const StyledTableBody = styled(TableBody)`
     padding: 12px;
     border-bottom: 1px solid #ddd;
     text-align: left;
+          font-family: Aptos Display;
+font-size:16px;
+
     white-space: nowrap; /* Prevent text wrapping */
     overflow: hidden; /* Hide overflowing text */
     text-overflow: ellipsis; /* Add ellipsis for overflowing text */
@@ -150,11 +160,13 @@ const PaginationControls = styled.div`
 
 const PaginationButton = styled.button`
   padding: 10px 15px;
-  background-color: #007bff;
+  background-color: #002985;
   color: white;
   border: none;
   border-radius: 5px;
   cursor: pointer;
+font-family: Aptos Display;
+font-size:16px;
 
   &:disabled {
     background-color: #ddd;
@@ -178,9 +190,9 @@ const Loader = styled.div`
 `;
 
 
+
+
 const Dashboard = () => {
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [customers, setCustomers] = useState([]);
   const [loading, setLoading] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
   const [searchData, setSearchData] = useState({ fromDate: '', toDate: '' });
@@ -189,58 +201,6 @@ const Dashboard = () => {
   const [userRole, setUserRole] = useState(''); // Add state for user role
 
   const recordsPerPage = 5;
-
-  const initialFormData = {
-    slNo: '',
-    tripDate: '',
-    truckPlateNumber: '',
-    truckDriverName: '',
-    truckCategory: '',
-    deliveryNote: '',
-    customerName: '',
-    cO: '',
-    firstLoading: '',
-    firstOffloading: '',
-    secondLoading: '',
-    secondOffloading: '',
-    customerRate: '',
-    customerWaitingCharges: '',
-    amountReceived: '',
-    amountBalance: '',
-    driverRate: '',
-    driverWaitingCharges: '',
-    amountPaid: '',
-    transactionAmountBalance: '',
-    invoiceNo: '',
-    invoiceDate: '',
-    remarks: '',
-  };
-
-  const [formData, setFormData] = useState({
-    slNo: '',
-    tripDate: '',
-    truckPlateNumber: '',
-    truckDriverName: '',
-    truckCategory: '',
-    deliveryNote: '',
-    customerName: '',
-    cO: '',
-    firstLoading: '',
-    firstOffloading: '',
-    secondLoading: '',
-    secondOffloading: '',
-    customerRate: '',
-    customerWaitingCharges: '',
-    amountReceived: '',
-    amountBalance: '',
-    driverRate: '',
-    driverWaitingCharges: '',
-    amountPaid: '',
-    transactionAmountBalance: '',
-    invoiceNo: '',
-    invoiceDate: '',
-    remarks: '',
-  });
 
   useEffect(() => {
     const userData = JSON.parse(localStorage.getItem('userData'));
@@ -350,8 +310,6 @@ const Dashboard = () => {
     }
   };
 
-
-
   const handleExport = () => {
     if (searchResults.length === 0) {
       toast.error('No data to export');
@@ -406,10 +364,8 @@ const Dashboard = () => {
     document.body.removeChild(link);
   };
 
-
   return (
     <DashboardContainer>
-
       <ContentContainer>
         <Heading>Trip Information</Heading>
 
@@ -423,10 +379,10 @@ const Dashboard = () => {
             <Input type="date" name="toDate" value={searchData.toDate} onChange={handleSearchInputChange} />
           </InputWrapper>
           <ButtonGroup>
-            <Button color="#17a2b8" onClick={handleSearchSubmit}><FaSearch /> Search</Button>
+            <Button color="#002985" onClick={handleSearchSubmit}><FaSearch /> Search</Button>
             {loggedIn && (
               <>
-                <Button color="#343a40" onClick={handleExport}><FaFileExport /> Export</Button>
+                <Button color="#002985" onClick={handleExport}><FaFileExport /> Export</Button>
                 {userRole !== 'User' && (
                   <Button color="#28a745" onClick={openNewTab}><FaPlus /> Add New</Button>
                 )}
@@ -505,7 +461,7 @@ const Dashboard = () => {
                                 style={{
                                   padding: '5px 10px',
                                   marginRight: '5px',
-                                  backgroundColor: '#007bff',
+                                  backgroundColor: '#002985',
                                   color: '#fff',
                                   border: 'none',
                                   borderRadius: '3px',

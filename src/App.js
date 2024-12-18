@@ -8,7 +8,6 @@ import Customers from './pages/Customers';
 import Login from './pages/Login';
 import PRT from './pages/PRT'; // Import PRT page
 import Admin from './pages/Admin'; // Import Admin page
-import About from './pages/About'; // Import About page
 import Home from './pages/Home';
 import AddNewTrip from './pages/AddNewTrip';
 import AddNewExpense from './pages/AddNewExpense';
@@ -31,7 +30,6 @@ const App = () => {
         <Route path="/customers" element={<Customers />} />
         <Route path="/prt" element={<PRT />} /> {/* Add route for PRT */}
         <Route path="/admin" element={<Admin />} /> {/* Add route for Admin */}
-        <Route path="/about" element={<About />} /> {/* Add route for About */}
         <Route path="/change-password" element={<ChangePassword />} /> {/* Add route for About */}
 
         {/* Add other routes here */}

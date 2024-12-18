@@ -1,32 +1,20 @@
 import React, { useEffect, useState } from 'react';
 import styled from 'styled-components';
-import { NavLink, useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 // Sidebar container
 const SidebarContainer = styled.div`
   width: 250px;
-  background-color: #000;
+  border: 1px solid #002985; /* Updated border color */
   padding: 2rem 1rem;
   display: flex;
   flex-direction: column;
   gap: 20px;
-  color: #fff;
+  color: #e0e0e0;
 `;
 
-// Styled logo container
-const LogoContainer = styled.div`
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  margin-bottom: 20px;
-`;
 
-// Styled logo image
-const LogoImage = styled.img`
-  max-width: 100%;
-  height: auto;
-  border-radius: 8px;
-`;
+
 
 // Navigation list
 const NavList = styled.ul`
@@ -36,48 +24,13 @@ const NavList = styled.ul`
   display: flex;
   flex-direction: column;
   gap: 15px;
+  margin-top:60px;
 `;
 
-// Navigation link styles
-const StyledNavLink = styled(NavLink)`
-  background-color: #28a745;
-  color: #fff;
-  text-decoration: none;
-  border-radius: 5px;
-  padding: 0.75rem 1.5rem;
-  font-size: 16px;
-  cursor: pointer;
-  transition: background-color 0.3s ease, box-shadow 0.3s ease;
-  text-align: center;
-  display: block;
-
-  &:hover {
-    background-color: #218838;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-  }
-
-  &:focus {
-    outline: none;
-    box-shadow: 0 0 0 2px #218838;
-  }
-
-  &.active {
-    background-color: #218838;
-  }
-`;
-
-// Welcome message and logout section
-const Welcome = styled.div`
-  margin-top: auto;
-  font-size: 16px;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-`;
 
 // Navigation link styles
 const StyledAnchor = styled.a`
-  background-color: #28a745;
+  background-color: #002985;
   color: #fff;
   text-decoration: none;
   border-radius: 5px;
@@ -97,11 +50,22 @@ const StyledAnchor = styled.a`
     outline: none;
     box-shadow: 0 0 0 2px #218838;
   }
+`;
+
+const LogoContainer = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: absolute; // Position it absolutely relative to the parent container
+  top: 20px;          // Adjust the distance from the top as needed
+  left: 60%;          // Center horizontally
+  transform: translateX(-50%); // Adjust for centering
+  z-index: 10;        // Ensure it stays above other elements
+  margin-bottom: 20px; // Optional if you want some spacing below
 `;
 
 const Sidebar = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [role, setRole] = useState('User'); // Default role as 'User'
 
@@ -130,9 +94,8 @@ const Sidebar = () => {
 
   return (
     <SidebarContainer>
-      {/* Logo section */}
       <LogoContainer>
-        <LogoImage src="/Logo.jpeg" alt="Logo" />
+
       </LogoContainer>
 
       {/* Navigation List */}

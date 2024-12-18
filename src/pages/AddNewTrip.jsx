@@ -5,9 +5,7 @@ import { doc, addDoc, updateDoc, collection, getDoc, getDocs } from 'firebase/fi
 import { onAuthStateChanged } from 'firebase/auth';
 import { ToastContainer, toast } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import Sidebar from '../components/Sidebar';
 import Modal from 'react-modal';
-import { BsWindowSidebar } from 'react-icons/bs';
 import { useSearchParams } from 'react-router-dom'; // Import useSearchParams
 
 
@@ -17,8 +15,6 @@ const DashboardContainer = styled.div`
   min-height: 100vh;
   background-color: #f9f9f9;
 `;
-
-
 
 const ContentContainer = styled.div`
   flex-grow: 1;
@@ -69,26 +65,6 @@ const Label = styled.label`
   margin-bottom: 5px;
 `;
 
-const FormLabel = styled.label`
-  font-weight: bold;
-  margin-bottom: 5px;
-`;
-
-const CloseButton = styled.button`
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: none;
-  border: none;
-  color: #333;
-  font-size: 18px;
-  cursor: pointer;
-
-  &:hover {
-    color: #dc3545;
-  }
-`;
-
 const Select = styled.select`
   padding: 0.5rem;
   font-size: 14px;
@@ -101,7 +77,6 @@ const Select = styled.select`
     border-color: #007bff;
   }
 `;
-
 
 const Input = styled.input`
   padding: 0.5rem;
@@ -156,14 +131,11 @@ const Loader = styled.div`
   animation: ${spin} 1s linear infinite;
 `;
 
-
 const AddNewTrip = () => {
-  const [loggedIn, setLoggedIn] = useState(false);
   const [loading, setLoading] = useState(false);
   const [customers, setCustomers] = useState([]);
   const [newCustomerName, setNewCustomerName] = useState('');
   const [isCustomerModalOpen, setIsCustomerModalOpen] = useState(false);
-  const [modalLoading, setModalLoading] = useState(false); // Loading state for the modal
 
 
   const initialFormData = {
@@ -190,8 +162,6 @@ const AddNewTrip = () => {
     invoiceNo: '',
     invoiceDate: '',
     remarks: '',
-    customerName: '',
-
   };
 
   const [formData, setFormData] = useState(initialFormData);
@@ -227,7 +197,6 @@ const AddNewTrip = () => {
   // Check if user is logged in
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
-      setLoggedIn(!!user);
       console.log('User logged in:', user);
     });
     return () => unsubscribe();
@@ -311,8 +280,6 @@ const AddNewTrip = () => {
 
   const handleAddCustomer = async (e) => {
     e.preventDefault();
-    setModalLoading(true); // Start loader
-
     try {
       const newCustomer = {
         customer: newCustomerName, created: new Date().toISOString(), // Set created date
@@ -327,7 +294,6 @@ const AddNewTrip = () => {
       console.error('Error adding customer:', error.message);
       toast.error('Failed to add customer: ' + error.message);
     } finally {
-      setModalLoading(false); // Stop loader
     }
   };
 

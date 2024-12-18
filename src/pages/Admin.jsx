@@ -22,15 +22,6 @@ const ContentContainer = styled.div`
   padding: 2rem;
 `;
 
-const Heading = styled.h1`
-  font-size: 2.5rem;
-  color: #fff;
-  text-align: center;
-  background: linear-gradient(45deg, #6a11cb, #2575fc);
-  padding: 1rem;
-  border-radius: 8px;
-`;
-
 const TabContainer = styled.div`
   display: flex;
   border-bottom: 2px solid #ddd;
@@ -42,16 +33,11 @@ const Tab = styled.button`
   padding: 1rem;
   font-size: 1.2rem;
   font-weight: bold;
-  border: none;
-  background-color: ${(props) => (props.active ? '#6a11cb' : '#f9f9f9')};
-  color: ${(props) => (props.active ? 'white' : '#333')};
+  border: 1px solid white;
+  background-color: #002985;
+  color: ${(props) => (props.active ? 'white' : '#fff')};
   cursor: pointer;
   transition: background-color 0.3s;
-
-  &:hover {
-    background-color: #6a11cb;
-    color: white;
-  }
 `;
 
 const FormBox = styled.div`
@@ -100,8 +86,7 @@ const StyledButton = styled.button`
   border: none;
   border-radius: 8px;
   cursor: pointer;
-  background-color: ${(props) =>
-    props.variant === 'add' ? '#4caf50' : props.variant === 'edit' ? '#2196f3' : '#f44336'};
+  background-color: #002985;;
   color: white;
   box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
   transition: transform 0.2s;
@@ -110,6 +95,48 @@ const StyledButton = styled.button`
     transform: scale(1.05);
   }
 `;
+
+const StylishButton = styled.button`
+  background-color: #002985;
+  color: white;
+  font-size: 1rem;
+  font-weight: bold;
+  border: none;
+  border-radius: 8px;
+  padding: 8px 16px; /* Consistent padding for height */
+  min-height: 40px; /* Ensures consistent height */
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background-color 0.3s ease, transform 0.2s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+  }
+`;
+
+const EditButton = styled(StylishButton)`
+  background-color: #002985;
+  &:hover {
+    background-color: #001f6b;
+  }
+`;
+
+const DeleteButton = styled(StylishButton)`
+  background-color: #e74c3c;
+  &:hover {
+    background-color: #c0392b;
+  }
+`;
+const ActionButtons = styled.div`
+  display: flex; 
+  gap: 10px; /* Spacing between buttons */
+  align-items: center; /* Align vertically */
+  justify-content: flex-start; /* Align to the start of the row */
+  flex-wrap: nowrap; /* Prevent buttons from wrapping */
+`;
+
 
 const TableContainer = styled.div`
   background-color: #fff;
@@ -124,7 +151,7 @@ const Table = styled.table`
 `;
 
 const TableHeader = styled.thead`
-  background: linear-gradient(45deg, #6a11cb, #2575fc);
+  background-color:#002985;
   color: white;
 
   th {
@@ -229,6 +256,7 @@ const Admin = () => {
   // Fetch data from Firebase
   useEffect(() => {
     const fetchData = async () => {
+      const collectionRef = collection(db, 'adminData'); // Move collectionRef here
       const querySnapshot = await getDocs(collectionRef);
       const data = querySnapshot.docs.map(doc => ({
         ...doc.data(),
@@ -238,7 +266,8 @@ const Admin = () => {
     };
 
     fetchData();
-  }, []);
+  }, []); // Keep dependency array empty
+
 
   const handlePartnerChange = (e) => {
     const { name, value } = e.target;
@@ -278,19 +307,12 @@ const Admin = () => {
   };
 
   const [users, setUsers] = useState([]);
-  const [changePasswordData, setChangePasswordData] = useState({
-    email: '',
-    newPassword: ''
-  });
-
-  const partnerCollectionRef = collection(db, 'adminData');
-  const [partners, setPartners] = useState([]);
-
 
   const userCollectionRef = collection(db, 'users');
 
   useEffect(() => {
     const fetchUsers = async () => {
+      const userCollectionRef = collection(db, 'users'); // Move userCollectionRef here
       const querySnapshot = await getDocs(userCollectionRef);
       const data = querySnapshot.docs.map((doc) => ({
         ...doc.data(),
@@ -300,20 +322,11 @@ const Admin = () => {
     };
 
     fetchUsers();
-  }, []);
+  }, []); // Keep dependency array empty
+
 
   const handleTabSwitch = (tabName) => {
     setActiveTab(tabName);
-  };
-
-  const handleAddPartner = async () => {
-    if (partnerFormData.status === 'Inactive' && !partnerFormData.endDate) {
-      alert('End date is required for inactive status.');
-      return;
-    }
-    const newDoc = await addDoc(partnerCollectionRef, partnerFormData);
-    setPartners([...partners, { ...partnerFormData, id: newDoc.id }]);
-    setPartnerFormData({ name: '', percentage: '', startDate: '', status: 'Active', endDate: '' });
   };
 
   const handleDeleteUser = async (id) => {
@@ -441,19 +454,12 @@ const Admin = () => {
                       <td>{item.status}</td>
                       <td>{item.status === 'Inactive' ? item.endDate : '-'}</td>
                       <td>
-                        <StyledButton
-                          variant="edit"
-                          onClick={() => handleEdit(item.id)}
-                        >
-                          Edit
-                        </StyledButton>
-                        <StyledButton
-                          variant="delete"
-                          onClick={() => handleDelete(item.id)}
-                        >
-                          Delete
-                        </StyledButton>
+                        <ActionButtons>
+                          <EditButton onClick={() => handleEdit(item.id)}>Edit</EditButton>
+                          <DeleteButton onClick={() => handleDelete(item.id)}>Delete</DeleteButton>
+                        </ActionButtons>
                       </td>
+
                     </tr>
                   ))}
                 </TableBody>
@@ -537,20 +543,11 @@ const Admin = () => {
                       <td>{user.role}</td>
                       <td>
                         {/* Edit button */}
-                        <StyledButton
-                          variant="edit"
-                          onClick={() => handleEditUser(user)}
-                        >
-                          Edit
-                        </StyledButton>
+                        <ActionButtons>
+                          <EditButton onClick={() => handleEditUser(user)}>Edit</EditButton>
+                          <DeleteButton onClick={() => handleDeleteUser(user.id)}>Delete</DeleteButton>
+                        </ActionButtons>
 
-                        {/* Delete button */}
-                        <StyledButton
-                          variant="delete"
-                          onClick={() => handleDeleteUser(user.id)}
-                        >
-                          Delete
-                        </StyledButton>
                       </td>
                     </tr>
                   ))}

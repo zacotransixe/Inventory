@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState } from 'react';
 import styled from 'styled-components';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { db } from '../firebase';
@@ -31,6 +31,7 @@ const Header = styled.div`
 const DateInput = styled.input`
   padding: 0.75rem;
   font-size: 1rem;
+  font-family: Aptos Display;
   border: 1px solid #ccc;
   border-radius: 5px;
   margin: 0 10px;
@@ -38,8 +39,9 @@ const DateInput = styled.input`
 
 const SearchButton = styled.button`
   padding: 0.75rem 1.5rem;
-  background-color: #007bff;
+  background-color: #002985;
   color: white;
+  font-family: Aptos Display;
   font-size: 1rem;
   border: none;
   border-radius: 5px;
@@ -65,7 +67,7 @@ const Table = styled.table`
   }
 
   th {
-    background-color: #007bff;
+    background-color: #002985;
     color: white;
   }
 
@@ -79,45 +81,6 @@ const Loader = styled.div`
   margin-top: 20px;
 `;
 
-const SmallTableContainer = styled.div`
-  width: 40%; /* Occupy 30% of the width */
-  background-color: #fff;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-`;
-
-const LargeTableContainer = styled.div`
-  width: 50%; /* Occupy the remaining space */
-  background-color: #fff;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-`;
-
-const SmallTable = styled.table`
-  width: 100%;
-  border-collapse: collapse;
-`;
-
-const SmallTableHeader = styled.th`
-  padding: 1rem;
-  text-align: left;
-  font-weight: 600;
-  font-size: 0.9rem;
-  background-color: #007bff;
-  color: white;
-`;
-
-const SmallTableCell = styled.td`
-  padding: 0.75rem;
-  text-align: left;
-  font-size: 0.9rem;
-  color: #333;
-  border-bottom: 1px solid #ddd;
-  background-color: #f9f9f9;
-`;
-
 const HeaderTitle = styled.h2`
   margin-bottom: 1rem;
   font-size: 1.2rem;
@@ -126,19 +89,13 @@ const HeaderTitle = styled.h2`
   color: #333;
 `;
 
-const TableWrapper = styled.div`
-  display: flex;
-  justify-content: space-between; /* Ensure tables align side by side */
-  gap: 20px; /* Add space between the two tables */
-`;
-
 const LargeTable = styled.table`
   width: 100%;
   border-collapse: collapse;
 `;
 
 const LargeTableHead = styled.thead`
-  background-color: #007bff;
+  background-color: #002985;
   color: #fff;
 `;
 
@@ -147,9 +104,6 @@ const LargeTableRow = styled.tr`
     background-color: #f9f9f9;
   }
 
-  &:hover {
-    background-color: #e9ecef;
-  }
 `;
 
 const LargeTableHeader = styled.th`
@@ -167,14 +121,6 @@ const LargeTableCell = styled.td`
   border-bottom: 1px solid #ddd;
 `;
 
-const MonthlyExpensesTableContainer = styled.div`
-  width: 20%; /* Adjust width as needed */
-  background-color: #fff;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  overflow: hidden;
-`;
-
 const MonthlyExpensesTable = styled.table`
   width: 100%;
   border-collapse: collapse;
@@ -187,7 +133,7 @@ const MonthlyExpensesTable = styled.table`
   }
 
   th {
-    background-color: #007bff;
+    background-color: #002985;
     color: white;
   }
 
@@ -206,15 +152,12 @@ const Tab = styled.button`
   padding: 10px 20px;
   font-size: 1rem;
   font-weight: bold;
-  background-color: ${({ active }) => (active ? '#007bff' : 'white')};
-  color: ${({ active }) => (active ? 'white' : '#007bff')};
+  background-color: ${({ active }) => (active ? '#002985' : 'white')};
+  color: ${({ active }) => (active ? 'white' : '#002985')};
   border: none;
   cursor: pointer;
-  border-bottom: ${({ active }) => (active ? '2px solid #007bff' : 'none')};
+  border-bottom: ${({ active }) => (active ? '2px solid #002985' : 'none')};
 
-  &:hover {
-    background-color: #e7f0ff;
-  }
 `;
 
 const ExportButtonContainer = styled.div`
@@ -226,18 +169,14 @@ const ExportButtonContainer = styled.div`
 
 const ExportButton = styled.button`
   padding: 5px 10px;
-  background-color: #007bff;
+  background-color: #002985;
   color: white;
   border: none;
   border-radius: 5px;
   cursor: pointer;
 
-  &:hover {
-    background-color: #0056b3;
-  }
+ 
 `;
-
-
 
 const Reports = () => {
   const [fromDate, setFromDate] = useState('');
@@ -249,9 +188,7 @@ const Reports = () => {
   const [customerDriverSummary, setCustomerDriverTotals] = useState([]);
   const [customerWiseReport, setCustomerWiseReport] = useState([]);
   const [monthlyExpenses, setMonthlyExpenses] = useState([]);
-  const [loadToOffloadReport, setLoadToOffloadReport] = useState([]);
   const [firstLoadOffloadSummary, setFirstLoadOffloadSummary] = useState([]); // New state
-
   const [admins, setAdmins] = useState([]); // Add this to store admin data
 
 
@@ -553,75 +490,89 @@ const Reports = () => {
 
   const generateCustomerDriverSummary = (trips) => {
     console.log('Trips : ', trips);
+
     if (!trips || trips.length === 0) {
-      // Return default values if there are no trips
-      return {
-        customer: {
-          description: "Customer",
-          rate: "0.00",
-          wait: "0.00",
-          total: "0.00",
-          paid: "0.00",
-          balance: "0.00",
-          trips: 0,
-        },
-        driver: {
-          description: "Driver",
-          rate: "0.00",
-          wait: "0.00",
-          total: "0.00",
-          paid: "0.00",
-          balance: "0.00",
-          trips: 0,
-        },
-      };
+      return {};
     }
 
-    let customerRate = 0;
-    let customerWait = 0;
-    let customerPaid = 0;
-    let customerBalance = 0;
-    let driverRate = 0;
-    let driverWait = 0;
-    let driverPaid = 0;
-    let driverBalance = 0;
-    let totalTrips = 0;
+    // Utility to extract month and year safely
+    const getMonthYear = (dateInput) => {
+      let date;
+
+      // Check if the input is a Firebase Timestamp
+      if (dateInput?.toDate) {
+        date = dateInput.toDate(); // Convert Firestore Timestamp to JS Date
+      } else if (typeof dateInput === "string") {
+        date = new Date(dateInput); // Parse string to JS Date
+      } else if (dateInput instanceof Date) {
+        date = dateInput; // Already a JS Date
+      } else {
+        console.warn("Invalid date:", dateInput);
+        return { month: "Unknown", year: "Unknown" }; // Default values
+      }
+
+      // Extract Month and Year
+      return {
+        month: date.toLocaleString("default", { month: "short" }), // e.g., Jan
+        year: date.getFullYear(), // e.g., 2024
+      };
+    };
+
+    // Initialize summary
+    const summary = {};
 
     trips.forEach((trip) => {
-      customerRate += parseFloat(trip.customerRate || 0);
-      customerWait += parseFloat(trip.customerWaitingCharges || 0);
-      customerPaid += parseFloat(trip.amountReceived || 0);
-      customerBalance += parseFloat(trip.amountBalance || 0);
+      const { month, year } = getMonthYear(trip.tripDate); // Use safe date parsing
+      const key = `${month}-${year}`;
 
-      driverRate += parseFloat(trip.driverRate || 0);
-      driverWait += parseFloat(trip.driverWaitingCharges || 0);
-      driverPaid += parseFloat(trip.amountPaid || 0);
-      driverBalance += parseFloat(trip.amountBalance1 || 0);
+      if (!summary[key]) {
+        summary[key] = {
+          month,
+          year,
+          customer: { description: "Customer", rate: 0, wait: 0, total: 0, paid: 0, balance: 0, trips: 0 },
+          driver: { description: "Driver", rate: 0, wait: 0, total: 0, paid: 0, balance: 0, trips: 0 },
+        };
+      }
 
-      totalTrips += 1; // Increment trip count
+      // Aggregate Customer values
+      summary[key].customer.rate += parseFloat(trip.customerRate || 0);
+      summary[key].customer.wait += parseFloat(trip.customerWaitingCharges || 0);
+      summary[key].customer.paid += parseFloat(trip.amountReceived || 0);
+      summary[key].customer.balance += parseFloat(trip.amountBalance || 0);
+      summary[key].customer.trips += 1;
+
+      // Aggregate Driver values
+      summary[key].driver.rate += parseFloat(trip.driverRate || 0);
+      summary[key].driver.wait += parseFloat(trip.driverWaitingCharges || 0);
+      summary[key].driver.paid += parseFloat(trip.amountPaid || 0);
+      summary[key].driver.balance += parseFloat(trip.amountBalance1 || 0);
+      summary[key].driver.trips += 1;
     });
 
-    return {
-      customer: {
-        description: "Customer",
-        rate: customerRate.toFixed(2),
-        wait: customerWait.toFixed(2),
-        total: (customerRate + customerWait).toFixed(2),
-        paid: customerPaid.toFixed(2),
-        balance: customerBalance.toFixed(2),
-        trips: totalTrips,
-      },
-      driver: {
-        description: "Driver",
-        rate: driverRate.toFixed(2),
-        wait: driverWait.toFixed(2),
-        total: (driverRate + driverWait).toFixed(2),
-        paid: driverPaid.toFixed(2),
-        balance: driverBalance.toFixed(2),
-        trips: totalTrips,
-      },
-    };
+    // Format values to two decimal places
+    Object.keys(summary).forEach((key) => {
+      summary[key].customer.rate = summary[key].customer.rate.toFixed(2);
+      summary[key].customer.wait = summary[key].customer.wait.toFixed(2);
+      summary[key].customer.total = (
+        parseFloat(summary[key].customer.rate) + parseFloat(summary[key].customer.wait)
+      ).toFixed(2);
+      summary[key].customer.paid = summary[key].customer.paid.toFixed(2);
+      summary[key].customer.balance = summary[key].customer.balance.toFixed(2);
+
+      summary[key].driver.rate = summary[key].driver.rate.toFixed(2);
+      summary[key].driver.wait = summary[key].driver.wait.toFixed(2);
+      summary[key].driver.total = (
+        parseFloat(summary[key].driver.rate) + parseFloat(summary[key].driver.wait)
+      ).toFixed(2);
+      summary[key].driver.paid = summary[key].driver.paid.toFixed(2);
+      summary[key].driver.balance = summary[key].driver.balance.toFixed(2);
+    });
+
+    return summary;
   };
+
+
+
 
   const generateCustomerWiseReport = (trips) => {
     const customerSummary = {};
@@ -799,7 +750,7 @@ const Reports = () => {
             Monthly Expenses
           </Tab>
           <Tab active={activeTab === 4} onClick={() => setActiveTab(4)}>
-            First Load-Offload Summary
+            Origin - Destination Summary
           </Tab>
         </TabsContainer>
 
@@ -898,32 +849,35 @@ const Reports = () => {
             )}
             {activeTab === 1 && (
               <TableContainer>
-                <HeaderTitle>Customer & Driver Summary
+                <HeaderTitle>
+                  Customer & Driver Summary
                   <ExportButtonContainer>
                     <ExportButton
                       onClick={() =>
                         exportToCSV(
-                          [
+                          Object.keys(customerDriverSummary).flatMap((monthKey) => [
                             {
+                              Month: monthKey, // Month-Year added
                               Description: "Customer",
-                              Rate: customerDriverSummary.customer.rate,
-                              Wait: customerDriverSummary.customer.wait,
-                              Total: customerDriverSummary.customer.total,
-                              Paid: customerDriverSummary.customer.paid,
-                              Balance: customerDriverSummary.customer.balance,
-                              Trips: customerDriverSummary.customer.trips,
+                              Rate: customerDriverSummary[monthKey].customer.rate,
+                              Wait: customerDriverSummary[monthKey].customer.wait,
+                              Total: customerDriverSummary[monthKey].customer.total,
+                              Paid: customerDriverSummary[monthKey].customer.paid,
+                              Balance: customerDriverSummary[monthKey].customer.balance,
+                              Trips: customerDriverSummary[monthKey].customer.trips,
                             },
                             {
+                              Month: monthKey, // Month-Year added
                               Description: "Driver",
-                              Rate: customerDriverSummary.driver.rate,
-                              Wait: customerDriverSummary.driver.wait,
-                              Total: customerDriverSummary.driver.total,
-                              Paid: customerDriverSummary.driver.paid,
-                              Balance: customerDriverSummary.driver.balance,
-                              Trips: customerDriverSummary.driver.trips,
+                              Rate: customerDriverSummary[monthKey].driver.rate,
+                              Wait: customerDriverSummary[monthKey].driver.wait,
+                              Total: customerDriverSummary[monthKey].driver.total,
+                              Paid: customerDriverSummary[monthKey].driver.paid,
+                              Balance: customerDriverSummary[monthKey].driver.balance,
+                              Trips: customerDriverSummary[monthKey].driver.trips,
                             },
-                          ],
-                          'CustomerDriverSummary.csv'
+                          ]),
+                          "CustomerDriverSummary.csv"
                         )
                       }
                     >
@@ -934,6 +888,9 @@ const Reports = () => {
                 <Table>
                   <thead>
                     <tr>
+                      <th>Month</th> {/* Add a new column for Month */}
+                      <th>Year</th> {/* Add a new column for Month */}
+
                       <th>Description</th>
                       <th>Rate</th>
                       <th>Wait</th>
@@ -944,38 +901,49 @@ const Reports = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {customerDriverSummary && customerDriverSummary.customer && customerDriverSummary.driver ? (
-                      <>
-                        <tr>
-                          <td>{customerDriverSummary.customer.description || '-'}</td>
-                          <td>{customerDriverSummary.customer.rate || '0.00'}</td>
-                          <td>{customerDriverSummary.customer.wait || '0.00'}</td>
-                          <td>{customerDriverSummary.customer.total || '0.00'}</td>
-                          <td>{customerDriverSummary.customer.paid || '0.00'}</td>
-                          <td>{customerDriverSummary.customer.balance || '0.00'}</td>
-                          <td>{customerDriverSummary.customer.trips || 0}</td>
-                        </tr>
-                        <tr>
-                          <td>{customerDriverSummary.driver.description || '-'}</td>
-                          <td>{customerDriverSummary.driver.rate || '0.00'}</td>
-                          <td>{customerDriverSummary.driver.wait || '0.00'}</td>
-                          <td>{customerDriverSummary.driver.total || '0.00'}</td>
-                          <td>{customerDriverSummary.driver.paid || '0.00'}</td>
-                          <td>{customerDriverSummary.driver.balance || '0.00'}</td>
-                          <td>{customerDriverSummary.driver.trips || 0}</td>
-                        </tr>
-                      </>
+                    {customerDriverSummary && Object.keys(customerDriverSummary).length > 0 ? (
+                      Object.keys(customerDriverSummary).map((key) => {
+                        const { month, year, customer, driver } = customerDriverSummary[key];
+
+                        return (
+                          <>
+                            <tr key={`${key}-customer`}>
+                              <td rowSpan="2">{month}</td> {/* Month Column */}
+                              <td rowSpan="2">{year}</td> {/* Year Column */}
+                              <td>{customer.description || "-"}</td>
+                              <td>{customer.rate || "0.00"}</td>
+                              <td>{customer.wait || "0.00"}</td>
+                              <td>{customer.total || "0.00"}</td>
+                              <td>{customer.paid || "0.00"}</td>
+                              <td>{customer.balance || "0.00"}</td>
+                              <td>{customer.trips || 0}</td>
+                            </tr>
+                            <tr key={`${key}-driver`}>
+                              <td>{driver.description || "-"}</td>
+                              <td>{driver.rate || "0.00"}</td>
+                              <td>{driver.wait || "0.00"}</td>
+                              <td>{driver.total || "0.00"}</td>
+                              <td>{driver.paid || "0.00"}</td>
+                              <td>{driver.balance || "0.00"}</td>
+                              <td>{driver.trips || 0}</td>
+                            </tr>
+                          </>
+                        );
+                      })
                     ) : (
                       <tr>
-                        <td colSpan="7" style={{ textAlign: 'center' }}>
+                        <td colSpan="9" style={{ textAlign: "center" }}>
                           No data available
                         </td>
                       </tr>
                     )}
                   </tbody>
+
+
                 </Table>
               </TableContainer>
             )}
+
             {activeTab === 2 && (
               <TableContainer>
                 <HeaderTitle>Customer Summary
