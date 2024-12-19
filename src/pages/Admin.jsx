@@ -253,6 +253,11 @@ const Admin = () => {
     setUserFormData({ name: '', email: '', role: 'User', tempPassword: '' }); // Reset form
   };
 
+  const handleCancelEdit1 = () => {
+    setEditingId(null); // Exit edit mode
+    setPartnerFormData({ name: '', percentage: '', startDate: '', status: 'Active', endDate: '' }); // Reset form
+  };
+
   // Fetch data from Firebase
   useEffect(() => {
     const fetchData = async () => {
@@ -429,7 +434,15 @@ const Admin = () => {
               {!editingId ? (
                 <StyledButton onClick={handleAdd}>Add</StyledButton>
               ) : (
-                <StyledButton onClick={handleSaveEdit}>Save Edit</StyledButton>
+                <ActionButtons>
+                  <StyledButton variant="edit" onClick={handleSaveEdit}>
+                    Save
+                  </StyledButton>
+                  <DeleteButton variant="delete" onClick={handleCancelEdit1}>
+                    Cancel
+                  </DeleteButton>
+                </ActionButtons>
+
               )}
             </FormBox>
 
@@ -510,17 +523,20 @@ const Admin = () => {
 
               {/* Show "Add" or "Save" button based on mode */}
               {!editingId ? (
+
                 <StyledButton variant="add" onClick={handleAddOrEditUser}>
                   Add User
                 </StyledButton>
               ) : (
                 <>
-                  <StyledButton variant="edit" onClick={handleAddOrEditUser}>
-                    Save
-                  </StyledButton>
-                  <StyledButton variant="delete" onClick={handleCancelEdit}>
-                    Cancel
-                  </StyledButton>
+                  <ActionButtons>
+                    <StyledButton variant="edit" onClick={handleAddOrEditUser}>
+                      Save
+                    </StyledButton>
+                    <DeleteButton variant="delete" onClick={handleCancelEdit}>
+                      Cancel
+                    </DeleteButton>
+                  </ActionButtons>
                 </>
               )}
             </FormBox>

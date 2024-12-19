@@ -64,7 +64,6 @@ const LogoContainer = styled.div`
   align-items: center;
   margin-bottom: 20px;
   margin-top: -300px;
-  margin-left: -5%;
 `;
 
 const LogoImage = styled.img`

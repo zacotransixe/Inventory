@@ -809,7 +809,7 @@ const Reports = () => {
                       <th>Deduction (3%)</th>
                       <th>Expenses</th>
 
-                      <th>Profit</th>
+                      <th>Net Profit</th>
                       {admins.map((admin) => (
                         <th key={admin.id}>{admin.name}</th>
                       ))}

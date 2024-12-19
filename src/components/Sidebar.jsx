@@ -5,11 +5,17 @@ import { useNavigate } from 'react-router-dom';
 // Sidebar container
 const SidebarContainer = styled.div`
   width: 250px;
-  border: 1px solid #002985; /* Updated border color */
+  height: 100%; // Full height for centering content  
   padding: 2rem 1rem;
   display: flex;
   flex-direction: column;
+  justify-content: center; // Center the content vertically
+  align-items: flex-end; // Align the sidebar to the right
   gap: 20px;
+  position: fixed; // Fix the sidebar to the viewport
+  top: 0;
+    right: 0; // Align to the right edge
+
   color: #e0e0e0;
 `;
 
@@ -24,7 +30,7 @@ const NavList = styled.ul`
   display: flex;
   flex-direction: column;
   gap: 15px;
-  margin-top:60px;
+
 `;
 
 
@@ -94,9 +100,7 @@ const Sidebar = () => {
 
   return (
     <SidebarContainer>
-      <LogoContainer>
 
-      </LogoContainer>
 
       {/* Navigation List */}
       <NavList>
@@ -164,23 +168,24 @@ const Sidebar = () => {
         <li>
           <StyledAnchor href="/change-password" target="_blank" rel="noopener noreferrer">Change Password</StyledAnchor>
         </li>
+        <StyledAnchor
+          onClick={isLoggedIn ? handleLogout : handleLogin}
+          style={{
+            backgroundColor: isLoggedIn ? '#d9534f' : '#28a745',
+            marginTop: '20px',
+            color: '#fff',
+            border: 'none',
+            padding: '10px 20px',
+            borderRadius: '5px',
+            cursor: 'pointer',
+          }}
+        >
+          {isLoggedIn ? 'Logout' : 'Login'}
+        </StyledAnchor>
       </NavList>
 
       {/* Welcome message and login/logout button */}
-      <button
-        onClick={isLoggedIn ? handleLogout : handleLogin}
-        style={{
-          backgroundColor: isLoggedIn ? '#d9534f' : '#28a745',
-          marginTop: '20px',
-          color: '#fff',
-          border: 'none',
-          padding: '10px 20px',
-          borderRadius: '5px',
-          cursor: 'pointer',
-        }}
-      >
-        {isLoggedIn ? 'Logout' : 'Login'}
-      </button>
+
     </SidebarContainer>
   );
 };
