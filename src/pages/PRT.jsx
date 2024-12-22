@@ -274,7 +274,7 @@ const PRT = () => {
     <PRTContainer>
       <ContentContainer>
         <Header>
-          <Title>Admin Expense</Title>
+          <Title>Partner Expense</Title>
         </Header>
 
         <FormContainer>

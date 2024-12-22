@@ -18,10 +18,6 @@ const SidebarContainer = styled.div`
 
   color: #e0e0e0;
 `;
-
-
-
-
 // Navigation list
 const NavList = styled.ul`
   list-style: none;
@@ -32,8 +28,6 @@ const NavList = styled.ul`
   gap: 15px;
 
 `;
-
-
 // Navigation link styles
 const StyledAnchor = styled.a`
   background-color: #002985;
@@ -57,7 +51,6 @@ const StyledAnchor = styled.a`
     box-shadow: 0 0 0 2px #218838;
   }
 `;
-
 const LogoContainer = styled.div`
   display: flex;
   justify-content: center;
@@ -69,7 +62,6 @@ const LogoContainer = styled.div`
   z-index: 10;        // Ensure it stays above other elements
   margin-bottom: 20px; // Optional if you want some spacing below
 `;
-
 const Sidebar = () => {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);

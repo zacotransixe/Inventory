@@ -2,6 +2,8 @@
 import React, { useState } from 'react';
 import styled from 'styled-components';
 import { updateDoc, doc } from 'firebase/firestore';
+import { collection, query, where, getDocs } from 'firebase/firestore';
+
 import { db } from '../firebase';
 
 const Container = styled.div`
@@ -26,6 +28,10 @@ const Heading = styled.h2`
   color: #333;
 `;
 
+const InputContainer = styled.div`
+  position: relative;
+`;
+
 const Input = styled.input`
   width: 100%;
   padding: 10px;
@@ -33,6 +39,16 @@ const Input = styled.input`
   border: 1px solid #ddd;
   border-radius: 5px;
   font-size: 16px;
+`;
+
+const EyeIcon = styled.span`
+  position: absolute;
+  right: 0px;
+  top: 35%;
+  transform: translateY(-50%);
+  cursor: pointer;
+  font-size: 18px;
+  color: #555;
 `;
 
 const Button = styled.button`
@@ -62,6 +78,9 @@ const ChangePassword = () => {
   const [currentPassword, setCurrentPassword] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
+  const [showCurrentPassword, setShowCurrentPassword] = useState(false);
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
 
@@ -76,11 +95,36 @@ const ChangePassword = () => {
     }
 
     try {
-      // Simulate user ID retrieval (update based on your logic)
-      const userId = JSON.parse(localStorage.getItem('userData')).userId;
-      const userDocRef = doc(db, 'users', userId);
+      const userData = JSON.parse(localStorage.getItem('userData'));
 
-      // Update password in Firestore
+      console.log(userData);
+      if (!userData) {
+        setError('User not logged in or session expired.');
+        return;
+      }
+
+
+
+      const email = userData.email;
+      // Query the Firestore collection for the document with the matching email
+      const usersCollectionRef = collection(db, 'users');
+      const userQuery = query(usersCollectionRef, where('email', '==', email));
+      const querySnapshot = await getDocs(userQuery);
+
+      if (querySnapshot.empty) {
+        setError('User not found.');
+        return;
+      }
+
+      let userId;
+      querySnapshot.forEach((doc) => {
+        userId = doc.id; // Retrieve the document ID
+      });
+
+      console.log(`User ID: ${userId}`);
+
+      // Reference the document and update the password
+      const userDocRef = doc(db, 'users', userId);
       await updateDoc(userDocRef, { password: newPassword });
 
       setSuccess('Password updated successfully!');
@@ -99,27 +143,47 @@ const ChangePassword = () => {
         <Heading>Change Password</Heading>
         {error && <ErrorMessage>{error}</ErrorMessage>}
         {success && <SuccessMessage>{success}</SuccessMessage>}
-        <Input
-          type="password"
-          placeholder="Current Password"
-          value={currentPassword}
-          onChange={(e) => setCurrentPassword(e.target.value)}
-          required
-        />
-        <Input
-          type="password"
-          placeholder="New Password"
-          value={newPassword}
-          onChange={(e) => setNewPassword(e.target.value)}
-          required
-        />
-        <Input
-          type="password"
-          placeholder="Confirm New Password"
-          value={confirmPassword}
-          onChange={(e) => setConfirmPassword(e.target.value)}
-          required
-        />
+
+        <InputContainer>
+          <Input
+            type={showCurrentPassword ? 'text' : 'password'}
+            placeholder="Current Password"
+            value={currentPassword}
+            onChange={(e) => setCurrentPassword(e.target.value)}
+            required
+          />
+          <EyeIcon onClick={() => setShowCurrentPassword((prev) => !prev)}>
+            {showCurrentPassword ? '🙈' : '👁️'}
+          </EyeIcon>
+        </InputContainer>
+
+        {/* New Password */}
+        <InputContainer>
+          <Input
+            type={showNewPassword ? 'text' : 'password'}
+            placeholder="New Password"
+            value={newPassword}
+            onChange={(e) => setNewPassword(e.target.value)}
+            required
+          />
+          <EyeIcon onClick={() => setShowNewPassword((prev) => !prev)}>
+            {showNewPassword ? '🙈' : '👁️'}
+          </EyeIcon>
+        </InputContainer>
+
+        {/* Confirm Password */}
+        <InputContainer>
+          <Input
+            type={showConfirmPassword ? 'text' : 'password'}
+            placeholder="Confirm New Password"
+            value={confirmPassword}
+            onChange={(e) => setConfirmPassword(e.target.value)}
+            required
+          />
+          <EyeIcon onClick={() => setShowConfirmPassword((prev) => !prev)}>
+            {showConfirmPassword ? '🙈' : '👁️'}
+          </EyeIcon>
+        </InputContainer>
         <Button type="submit">Update Password</Button>
       </Form>
     </Container>
