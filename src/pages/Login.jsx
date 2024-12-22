@@ -110,7 +110,8 @@ const LoginPage = () => {
           isLoggedIn: true,
           userId: userDoc.id, // Assuming `id` exists in the document
           email: userDoc.email,
-          role: userDoc.role
+          role: userDoc.role,
+          name: userDoc.name,
         };
         localStorage.setItem('userData', JSON.stringify(userData));
 

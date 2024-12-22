@@ -62,10 +62,23 @@ const LogoContainer = styled.div`
   z-index: 10;        // Ensure it stays above other elements
   margin-bottom: 20px; // Optional if you want some spacing below
 `;
+
+const WelcomeMessage = styled.div`
+  margin-bottom: 20px;
+  font-size: 18px;
+  font-weight: bold;
+  color: #000;
+  text-align: center; /* Ensures text is center-aligned */
+  width: 60%; /* Ensures the component spans full width of the parent */
+`;
+
+
+
 const Sidebar = () => {
   const navigate = useNavigate();
   const [isLoggedIn, setIsLoggedIn] = useState(false);
   const [role, setRole] = useState('User'); // Default role as 'User'
+  const [username, setUsername] = useState('');
 
 
 
@@ -77,6 +90,8 @@ const Sidebar = () => {
 
     setIsLoggedIn(userData?.isLoggedIn || false);
     setRole(userData?.role || 'User'); // Fetch role from localStorage
+    setUsername(userData?.name || 'User'); // Fetch username from localStorage
+
   }, []);
 
   const handleLogout = () => {
@@ -92,6 +107,7 @@ const Sidebar = () => {
 
   return (
     <SidebarContainer>
+      {isLoggedIn && <WelcomeMessage>Welcome, {username}!</WelcomeMessage>}
 
 
       {/* Navigation List */}
