@@ -3,6 +3,8 @@ import React, { useState } from 'react';
 import styled from 'styled-components';
 import { updateDoc, doc } from 'firebase/firestore';
 import { collection, query, where, getDocs } from 'firebase/firestore';
+import { AiOutlineEye, AiOutlineEyeInvisible } from 'react-icons/ai';
+
 
 import { db } from '../firebase';
 
@@ -83,6 +85,8 @@ const ChangePassword = () => {
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+
 
   const handleChangePassword = async (e) => {
     e.preventDefault();
@@ -137,6 +141,10 @@ const ChangePassword = () => {
     }
   };
 
+  const togglePasswordVisibility = () => {
+    setShowPassword((prev) => !prev);
+  };
+
   return (
     <Container>
       <Form onSubmit={handleChangePassword}>
@@ -153,7 +161,7 @@ const ChangePassword = () => {
             required
           />
           <EyeIcon onClick={() => setShowCurrentPassword((prev) => !prev)}>
-            {showCurrentPassword ? '🙈' : '👁️'}
+            {showCurrentPassword ? <AiOutlineEyeInvisible size={20} /> : <AiOutlineEye size={20} />}
           </EyeIcon>
         </InputContainer>
 
@@ -167,7 +175,7 @@ const ChangePassword = () => {
             required
           />
           <EyeIcon onClick={() => setShowNewPassword((prev) => !prev)}>
-            {showNewPassword ? '🙈' : '👁️'}
+            {showNewPassword ? <AiOutlineEyeInvisible size={20} /> : <AiOutlineEye size={20} />}
           </EyeIcon>
         </InputContainer>
 
@@ -181,9 +189,11 @@ const ChangePassword = () => {
             required
           />
           <EyeIcon onClick={() => setShowConfirmPassword((prev) => !prev)}>
-            {showConfirmPassword ? '🙈' : '👁️'}
+            {showConfirmPassword ? <AiOutlineEyeInvisible size={20} /> : <AiOutlineEye size={20} />}
           </EyeIcon>
         </InputContainer>
+
+
         <Button type="submit">Update Password</Button>
       </Form>
     </Container>
