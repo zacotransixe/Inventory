@@ -359,7 +359,7 @@ const Admin = () => {
     const { name, email, role } = userFormData;
 
     if (!name) return 'Name is required.';
-    if (!email || !/^\S+@\S+\.\S+$/.test(email)) return 'A valid email address is required.';
+    if (!email || !/^\S+@\S+\.\S+$/.test(email)) return 'A valid username required.';
     if (!role) return 'Role is required.';
     return false; // Validation passed
   };
