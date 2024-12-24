@@ -146,6 +146,24 @@ const NoResults = styled.div`
   padding: 2rem;
 `;
 
+const formatDate = (dateString) => {
+  if (!dateString) return ''; // Handle empty or invalid date
+  const date = new Date(dateString);
+
+  // Format date as dd-mm-yyyy
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
+  const year = date.getFullYear();
+
+  // Format time as hh:mm:ss
+  const hours = String(date.getHours()).padStart(2, '0');
+  const minutes = String(date.getMinutes()).padStart(2, '0');
+  const seconds = String(date.getSeconds()).padStart(2, '0');
+
+  return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
+};
+
+
 const Customers = () => {
   const [customersData, setCustomersData] = useState([]);
   const [loading, setLoading] = useState(false);
@@ -234,7 +252,7 @@ const Customers = () => {
                 {customersData.map((customer) => (
                   <StyledTableRow key={customer.firestoreId}>
                     <StyledTableCell>{customer.customer}</StyledTableCell>
-                    <StyledTableCell>{customer.created}</StyledTableCell>
+                    <StyledTableCell>{formatDate(customer.created)}</StyledTableCell>
                     <StyledTableCell>
                       <ActionButtons>
                         <EditButton onClick={() => handleEditCustomer(customer)}>
