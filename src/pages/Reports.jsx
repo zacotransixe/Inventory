@@ -311,6 +311,7 @@ const Reports = () => {
           driverRate: 0,
           driverWait: 0,
           driverTotal: 0,
+          grossProfit: 0, // New column for Gross Profit
           expenses: 0,
           deduction: 0,
           profit: 0,
@@ -332,6 +333,10 @@ const Reports = () => {
       summary[key].deduction = Number(
         (summary[key].customerTotal - summary[key].driverTotal) * 0.03
       );
+
+      // Calculate gross profit
+      summary[key].grossProfit =
+        summary[key].customerTotal - summary[key].driverTotal - summary[key].deduction;
     });
 
     console.log("Intermediate Summary (after trips):", summary);
@@ -367,6 +372,7 @@ const Reports = () => {
           driverRate: 0,
           driverWait: 0,
           driverTotal: 0,
+          grossProfit: 0, // Ensure column is initialized
           expenses: 0,
           deduction: 0,
           profit: 0,
@@ -382,6 +388,7 @@ const Reports = () => {
     // Calculate profits and distribute shares
     Object.keys(summary).forEach((key) => {
       const { customerTotal, driverTotal, expenses, deduction } = summary[key];
+
       // Profit includes expenses
       summary[key].profit =
         customerTotal - driverTotal - expenses - deduction;
@@ -488,6 +495,8 @@ const Reports = () => {
     );
   };
 
+
+
   const generateCustomerDriverSummary = (trips) => {
     console.log('Trips : ', trips);
 
@@ -571,18 +580,25 @@ const Reports = () => {
     return summary;
   };
 
-
-
-
   const generateCustomerWiseReport = (trips) => {
     const customerSummary = {};
 
     trips.forEach((trip) => {
       const customerName = trip.customerName || 'Unknown';
 
-      if (!customerSummary[customerName]) {
-        customerSummary[customerName] = {
+      // Extract Month and Year from trip date
+      const tripDate = new Date(trip.tripDate || new Date());
+      const month = tripDate.toLocaleString('default', { month: 'short' }); // e.g., Jan, Feb
+      const year = tripDate.getFullYear(); // e.g., 2023
+
+      // Create a unique key combining customer name, month, and year
+      const summaryKey = `${customerName}-${month}-${year}`;
+
+      if (!customerSummary[summaryKey]) {
+        customerSummary[summaryKey] = {
           customer: customerName,
+          month,
+          year,
           trips: 0,
           rate: 0,
           wait: 0,
@@ -592,17 +608,18 @@ const Reports = () => {
         };
       }
 
-      customerSummary[customerName].trips += 1; // Count trips
-      customerSummary[customerName].rate += parseFloat(trip.customerRate || 0);
-      customerSummary[customerName].wait += parseFloat(trip.customerWaitingCharges || 0);
-      customerSummary[customerName].paid += parseFloat(trip.amountReceived || 0);
-      customerSummary[customerName].balance += parseFloat(trip.amountBalance || 0);
-      customerSummary[customerName].total =
-        customerSummary[customerName].rate + customerSummary[customerName].wait;
+      customerSummary[summaryKey].trips += 1; // Count trips
+      customerSummary[summaryKey].rate += parseFloat(trip.customerRate || 0);
+      customerSummary[summaryKey].wait += parseFloat(trip.customerWaitingCharges || 0);
+      customerSummary[summaryKey].paid += parseFloat(trip.amountReceived || 0);
+      customerSummary[summaryKey].balance += parseFloat(trip.amountBalance || 0);
+      customerSummary[summaryKey].total =
+        customerSummary[summaryKey].rate + customerSummary[summaryKey].wait;
     });
 
     return Object.values(customerSummary);
   };
+
 
   const generateMonthlyExpenses = (expenses = []) => {
     if (!expenses || expenses.length === 0) {
@@ -777,7 +794,7 @@ const Reports = () => {
                             DriverWait: row.driverWait.toFixed(2),
                             DriverTotal: row.driverTotal.toFixed(2),
                             Expenses: row.expenses.toFixed(2),
-                            Deduction: row.deduction.toFixed(2),
+                            GrossProfit: row.grossProfit.toFixed(2),
                             Profit: row.profit.toFixed(2),
                             ...Object.fromEntries(
                               admins.map((admin) => [
@@ -806,7 +823,7 @@ const Reports = () => {
                       <th>Driver Rate</th>
                       <th>Driver Wait</th>
                       <th>Driver Total</th>
-                      <th>Deduction (3%)</th>
+                      <th>Gross Profit</th>
                       <th>Expenses</th>
 
                       <th>Net Profit</th>
@@ -827,7 +844,7 @@ const Reports = () => {
                         <td>{(row.driverRate || 0).toFixed(2)}</td>
                         <td>{(row.driverWait || 0).toFixed(2)}</td>
                         <td>{(row.driverTotal || 0).toFixed(2)}</td>
-                        <td>{(row.deduction || 0).toFixed(2)}</td>
+                        <td>{(row.grossProfit || 0).toFixed(2)}</td>
                         <td>{(row.expenses || 0).toFixed(2)}</td>
                         <td>{(row.profit || 0).toFixed(2)}</td>
                         {admins.map((admin) => (
@@ -946,13 +963,16 @@ const Reports = () => {
 
             {activeTab === 2 && (
               <TableContainer>
-                <HeaderTitle>Customer Summary
+                <HeaderTitle>
+                  Customer Summary
                   <ExportButtonContainer>
                     <ExportButton
                       onClick={() =>
                         exportToCSV(
                           customerWiseReport.map((customer) => ({
                             Customer: customer.customer,
+                            Month: customer.month, // Add Month to export
+                            Year: customer.year, // Add Year to export
                             Trips: customer.trips,
                             Rate: customer.rate.toFixed(2),
                             Wait: customer.wait.toFixed(2),
@@ -972,6 +992,8 @@ const Reports = () => {
                   <LargeTableHead>
                     <LargeTableRow>
                       <LargeTableHeader>Customer</LargeTableHeader>
+                      <LargeTableHeader>Month</LargeTableHeader> {/* Add Month Column */}
+                      <LargeTableHeader>Year</LargeTableHeader> {/* Add Year Column */}
                       <LargeTableHeader>Trips</LargeTableHeader>
                       <LargeTableHeader>Rate</LargeTableHeader>
                       <LargeTableHeader>Wait</LargeTableHeader>
@@ -984,6 +1006,8 @@ const Reports = () => {
                     {customerWiseReport.map((customer, index) => (
                       <LargeTableRow key={index}>
                         <LargeTableCell>{customer.customer}</LargeTableCell>
+                        <LargeTableCell>{customer.month}</LargeTableCell> {/* Add Month */}
+                        <LargeTableCell>{customer.year}</LargeTableCell> {/* Add Year */}
                         <LargeTableCell>{customer.trips}</LargeTableCell>
                         <LargeTableCell>{customer.rate.toFixed(2)}</LargeTableCell>
                         <LargeTableCell>{customer.wait.toFixed(2)}</LargeTableCell>
@@ -995,6 +1019,7 @@ const Reports = () => {
                   </tbody>
                 </LargeTable>
               </TableContainer>
+
             )}
             {activeTab === 3 && (
               <TableContainer>

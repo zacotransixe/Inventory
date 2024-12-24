@@ -553,7 +553,6 @@ const AddNewTrip = () => {
                   name="invoiceDate"
                   value={formData.invoiceDate}
                   onChange={handleInputChange}
-                  required
                 />
               </InputWrapper>
             </SectionContainer>

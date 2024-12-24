@@ -202,6 +202,19 @@ const Dashboard = () => {
 
   const recordsPerPage = 5;
 
+  const formatDateTime = (date) => {
+    if (!date) return '';
+    const d = new Date(date.seconds ? date.seconds * 1000 : date); // Handle Firestore Timestamp
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    const hours = String(d.getHours()).padStart(2, '0');
+    const minutes = String(d.getMinutes()).padStart(2, '0');
+    const seconds = String(d.getSeconds()).padStart(2, '0');
+    return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
+  };
+
+
   useEffect(() => {
     const userData = JSON.parse(localStorage.getItem('userData'));
     setLoggedIn(userData?.isLoggedIn || false);
@@ -257,6 +270,7 @@ const Dashboard = () => {
       const results = querySnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
+        created: formatDateTime(doc.data().created), // Format Firestore Timestamp
       }));
 
       if (results.length === 0) {
@@ -275,6 +289,7 @@ const Dashboard = () => {
   const indexOfLastRecord = currentPage * recordsPerPage;
   const indexOfFirstRecord = indexOfLastRecord - recordsPerPage;
   const currentRecords = searchResults.slice(indexOfFirstRecord, indexOfLastRecord);
+  console.log(currentRecords);
   const totalPages = Math.ceil(searchResults.length / recordsPerPage);
 
   const handleNextPage = () => {
@@ -339,7 +354,6 @@ const Dashboard = () => {
       { label: 'Transaction Amount Balance', key: 'transactionAmountBalance' },
       { label: 'Invoice No', key: 'invoiceNo' },
       { label: 'Invoice Date', key: 'invoiceDate' },
-      { label: 'Remarks', key: 'remarks' },
       { label: 'Created Date', key: 'created' },
     ];
 
@@ -423,7 +437,6 @@ const Dashboard = () => {
                       <TableCell>Amount Balance</TableCell>
                       <TableCell>Invoice No</TableCell>
                       <TableCell>Invoice Date</TableCell>
-                      <TableCell>Remarks</TableCell>
                       <TableCell>Created</TableCell>
                       <TableCell>Action</TableCell>
                     </TableRow>
@@ -452,7 +465,6 @@ const Dashboard = () => {
                         <TableCell>{result.transactionAmountBalance}</TableCell>
                         <TableCell>{result.invoiceNo}</TableCell>
                         <TableCell>{result.invoiceDate}</TableCell>
-                        <TableCell>{result.remarks}</TableCell>
                         <TableCell>{result.created}</TableCell>
                         <TableCell>
                           {userRole !== 'User' && ( // Only show buttons if the role is not 'User'

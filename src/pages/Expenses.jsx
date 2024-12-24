@@ -211,20 +211,19 @@ const Expenses = () => {
       const expensesList = expenseSnapshot.docs.map((doc) => ({
         id: doc.id,
         ...doc.data(),
-        date: formatDate(
-          doc.data().date instanceof Object && doc.data().date.toDate
-            ? doc.data().date.toDate()
-            : doc.data().date
-        ),
+        date: doc.data().date.toDate
+          ? doc.data().date.toDate().toISOString().split('T')[0] // Get yyyy-mm-dd
+          : doc.data().date, // Fallback to the original date if not a Firestore Timestamp
       }));
       setExpensesData(expensesList);
-      setFilteredExpenses(expensesList); // Initialize filtered data
+      setFilteredExpenses(expensesList);
       setLoading(false);
     } catch (error) {
       setLoading(false);
       toast.error('Error fetching expenses: ' + error.message);
     }
   };
+
 
   const handleSearch = () => {
     if (!fromDate || !toDate) {

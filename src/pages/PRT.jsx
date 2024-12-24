@@ -248,6 +248,13 @@ const PRT = () => {
     setEditingId(entry.id); // Enter edit mode
   };
 
+  const handleCancel = () => {
+    setSelectedPartner('');
+    setDate('');
+    setComment('');
+    setAmount('');
+    setEditingId(null); // Exit edit mode
+  };
 
 
 
@@ -301,9 +308,6 @@ const PRT = () => {
               dateFormat="YYYY-MM-DD" // Display date in YYYY-MM-DD format
               closeOnSelect={true} // Close picker on selecting a date
             />
-
-
-
           </InputField>
           <InputField>
             <label>Amount</label>
@@ -324,11 +328,21 @@ const PRT = () => {
             />
           </InputField>
 
-          <StylishButton onClick={handleSave}>
-            {editingId ? 'Update' : 'Save'}
-          </StylishButton>
-
+          <div style={{ display: 'flex', gap: '10px' }}>
+            <StylishButton onClick={handleSave}>
+              {editingId ? 'Update' : 'Save'}
+            </StylishButton>
+            {editingId && (
+              <StylishButton
+                onClick={handleCancel}
+                style={{ backgroundColor: '#f39c12' }} // Optional: add a distinct color for the Cancel button
+              >
+                Cancel
+              </StylishButton>
+            )}
+          </div>
         </FormContainer>
+
 
         <TableContainer>
           <StyledTable>

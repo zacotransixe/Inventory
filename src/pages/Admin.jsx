@@ -211,7 +211,22 @@ const Admin = () => {
 
   const [editingId, setEditingId] = useState(null); // To track if the form is in edit mode
 
+  const validateUserForm = () => {
+    const { name, email, role } = userFormData;
+
+    if (!name) return 'Name is required.';
+    if (!email || !/^\S+@\S+\.\S+$/.test(email)) return 'A valid email address is required.';
+    if (!role) return 'Role is required.';
+    return false; // Validation passed
+  };
+
   const handleAddOrEditUser = async () => {
+    const validationError = validateUserForm();
+    if (validationError) {
+      alert(validationError); // Display the validation error
+      return;
+    }
+
     if (editingId) {
       // Edit existing user
       const docRef = doc(db, 'users', editingId);
@@ -235,9 +250,9 @@ const Admin = () => {
       alert('User created successfully with temporary password: Welcome123');
     }
 
-    // Reset form after adding or editing
     setUserFormData({ name: '', email: '', role: 'User', tempPassword: '' });
   };
+
 
   const handleEditUser = (user) => {
     setUserFormData({
@@ -349,15 +364,33 @@ const Admin = () => {
     setUserFormData({ ...userFormData, [name]: value });
   };
 
+  const validatePartnerForm = () => {
+    const { name, percentage, startDate, status, endDate } = partnerFormData;
+
+    if (!name.trim()) return 'Name is required.';
+    if (!percentage || isNaN(percentage) || percentage <= 0) return 'Percentage must be a valid positive number.';
+    if (!startDate) return 'Start Date is required.';
+    if (status === 'Inactive' && !endDate) return 'End Date is required for inactive status.';
+    return false; // Validation passed
+  };
+
   const handleAdd = async () => {
-    if (partnerFormData.status === 'Inactive' && !partnerFormData.endDate) {
-      alert('End date is required for inactive status.');
+    const validationError = validatePartnerForm();
+    if (validationError) {
+      alert(validationError); // Display the validation error
       return;
     }
-    const newDoc = await addDoc(collectionRef, partnerFormData);
-    setTableData([...tableData, { ...partnerFormData, id: newDoc.id }]);
-    setPartnerFormData({ name: '', percentage: '', startDate: '', status: 'Active', endDate: '' });
+
+    try {
+      const newDoc = await addDoc(collectionRef, partnerFormData);
+      setTableData([...tableData, { ...partnerFormData, id: newDoc.id }]);
+      setPartnerFormData({ name: '', percentage: '', startDate: '', status: 'Active', endDate: '' });
+      alert('Partner added successfully.');
+    } catch (error) {
+      alert('Error adding partner: ' + error.message);
+    }
   };
+
 
 
 
