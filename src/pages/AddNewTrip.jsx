@@ -203,6 +203,30 @@ const AddNewTrip = () => {
   }, []);
 
   useEffect(() => {
+    const customerRate = parseFloat(formData.customerRate) || 0;
+    const customerWaitingCharges = parseFloat(formData.customerWaitingCharges) || 0;
+    const amountReceived = parseFloat(formData.amountReceived) || 0;
+
+    const driverRate = parseFloat(formData.driverRate) || 0;
+    const driverWaitingCharges = parseFloat(formData.driverWaitingCharges) || 0;
+    const amountPaid = parseFloat(formData.amountPaid) || 0;
+
+    setFormData((prevData) => ({
+      ...prevData,
+      amountBalance: (customerRate + customerWaitingCharges - amountReceived).toFixed(2),
+      transactionAmountBalance: (driverRate + driverWaitingCharges - amountPaid).toFixed(2),
+    }));
+  }, [
+    formData.customerRate,
+    formData.customerWaitingCharges,
+    formData.amountReceived,
+    formData.driverRate,
+    formData.driverWaitingCharges,
+    formData.amountPaid,
+  ]);
+
+
+  useEffect(() => {
     // Fetch customers from Firebase
     const fetchCustomers = async () => {
       try {
@@ -406,6 +430,16 @@ const AddNewTrip = () => {
 
                 />
               </InputWrapper>
+              <InputWrapper>
+                <Label>Supplier Name:</Label>
+                <Input
+                  type="text"
+                  name="supplierName"
+                  value={formData.supplierName || ''} // Default to empty string if undefined
+                  onChange={handleInputChange}
+                />
+              </InputWrapper>
+
             </SectionContainer>
 
             <h3>Loading and Offloading Details</h3>
@@ -459,7 +493,7 @@ const AddNewTrip = () => {
                   name="customerRate"
                   value={formData.customerRate}
                   onChange={handleInputChange}
-                  required
+
                 />
               </InputWrapper>
               <InputWrapper>
@@ -469,7 +503,7 @@ const AddNewTrip = () => {
                   name="customerWaitingCharges"
                   value={formData.customerWaitingCharges}
                   onChange={handleInputChange}
-                  required
+
                 />
               </InputWrapper>
               <InputWrapper>
@@ -479,7 +513,7 @@ const AddNewTrip = () => {
                   name="amountReceived"
                   value={formData.amountReceived}
                   onChange={handleInputChange}
-                  required
+
                 />
               </InputWrapper>
               <InputWrapper>
@@ -489,7 +523,7 @@ const AddNewTrip = () => {
                   name="amountBalance"
                   value={formData.amountBalance}
                   onChange={handleInputChange}
-                  required
+                  readOnly
                 />
               </InputWrapper>
               <InputWrapper>
@@ -519,7 +553,7 @@ const AddNewTrip = () => {
                   name="amountPaid"
                   value={formData.amountPaid}
                   onChange={handleInputChange}
-                  required
+
                 />
               </InputWrapper>
               <InputWrapper>
@@ -529,7 +563,7 @@ const AddNewTrip = () => {
                   name="transactionAmountBalance"
                   value={formData.transactionAmountBalance}
                   onChange={handleInputChange}
-                  required
+                  readOnly
                 />
               </InputWrapper>
             </SectionContainer>
@@ -539,11 +573,11 @@ const AddNewTrip = () => {
               <InputWrapper>
                 <Label>Invoice No:</Label>
                 <Input
-                  type="number"
+                  type="text"
                   name="invoiceNo"
                   value={formData.invoiceNo}
                   onChange={handleInputChange}
-                  required
+
                 />
               </InputWrapper>
               <InputWrapper>
@@ -555,7 +589,23 @@ const AddNewTrip = () => {
                   onChange={handleInputChange}
                 />
               </InputWrapper>
+
+
             </SectionContainer>
+
+            <h3>Remarks</h3>
+            <SectionContainer>
+              <InputWrapper>
+                <Label>Remarks:</Label>
+                <Input
+                  type="text"
+                  name="remarks"
+                  value={formData.remarks || ''} // Default to empty string if undefined
+                  onChange={handleInputChange}
+                />
+              </InputWrapper>
+            </SectionContainer>
+
 
             <SubmitButtonGroup>
               <SaveButton type="submit" disabled={loading}>

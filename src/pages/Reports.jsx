@@ -190,6 +190,7 @@ const Reports = () => {
   const [monthlyExpenses, setMonthlyExpenses] = useState([]);
   const [firstLoadOffloadSummary, setFirstLoadOffloadSummary] = useState([]); // New state
   const [admins, setAdmins] = useState([]); // Add this to store admin data
+  const [partnerExpenses, setPartnerExpenses] = useState([]);
 
 
   const fetchReports = async () => {
@@ -254,6 +255,10 @@ const Reports = () => {
       const firstLoadOffloadData = generateFirstLoadOffloadSummary(tripsData); // Generate new data
       setFirstLoadOffloadSummary(firstLoadOffloadData);
 
+      const partnerExpensesData = await fetchPartnerExpenses();
+      setPartnerExpenses(partnerExpensesData);
+
+
       setLoading(false);
     } catch (error) {
       setLoading(false);
@@ -273,6 +278,7 @@ const Reports = () => {
           partnerName: data.partnerName,
           amount: parseFloat(data.amount), // Convert amount to number
           date: data.date.toDate(), // Convert Firestore Timestamp to JavaScript Date
+          comment: data.comment,
         };
       });
 
@@ -336,7 +342,7 @@ const Reports = () => {
 
       // Calculate gross profit
       summary[key].grossProfit =
-        summary[key].customerTotal - summary[key].driverTotal - summary[key].deduction;
+        summary[key].customerTotal - summary[key].driverTotal;
     });
 
     console.log("Intermediate Summary (after trips):", summary);
@@ -769,6 +775,10 @@ const Reports = () => {
           <Tab active={activeTab === 4} onClick={() => setActiveTab(4)}>
             Origin - Destination Summary
           </Tab>
+          <Tab active={activeTab === 5} onClick={() => setActiveTab(5)}>
+            Partner Expenses
+          </Tab>
+
         </TabsContainer>
 
         {/* Tab Content */}
@@ -1079,21 +1089,72 @@ const Reports = () => {
                     </tr>
                   </thead>
                   <tbody>
-                    {firstLoadOffloadSummary.map((entry, index) => (
-                      <React.Fragment key={index}>
-                        {entry.combinations.map((combo, idx) => (
-                          <tr key={`${index}-${idx}`}>
-                            <td>{idx === 0 ? entry.month : ''}</td>
-                            <td>{combo.combination}</td>
-                            <td>{combo.count}</td>
-                          </tr>
-                        ))}
-                      </React.Fragment>
+                    {firstLoadOffloadSummary
+                      .map((entry) => ({
+                        ...entry,
+                        combinations: entry.combinations.sort((a, b) => b.count - a.count) // Sort combinations by count (descending)
+                      }))
+                      .map((entry, index) => (
+                        <React.Fragment key={index}>
+                          {entry.combinations.map((combo, idx) => (
+                            <tr key={`${index}-${idx}`}>
+                              <td>{idx === 0 ? entry.month : ''}</td>
+                              <td>{combo.combination}</td>
+                              <td>{combo.count}</td>
+                            </tr>
+                          ))}
+                        </React.Fragment>
+                      ))}
+                  </tbody>
+                </Table>
+              </TableContainer>
+            )}
+
+            {activeTab === 5 && (
+              <TableContainer>
+                <HeaderTitle>
+                  Partner Expenses
+                  <ExportButtonContainer>
+                    <ExportButton
+                      onClick={() =>
+                        exportToCSV(
+                          partnerExpenses.map((expense) => ({
+                            PartnerName: expense.partnerName,
+                            Amount: expense.amount.toFixed(2),
+                            Date: expense.date.toLocaleDateString(),
+                            Comment: expense.comment,
+                          })),
+                          'PartnerExpenses.csv'
+                        )
+                      }
+                    >
+                      Export to CSV
+                    </ExportButton>
+                  </ExportButtonContainer>
+                </HeaderTitle>
+                <Table>
+                  <thead>
+                    <tr>
+                      <th>Partner Name</th>
+                      <th>Amount</th>
+                      <th>Date</th>
+                      <th>Comment</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {partnerExpenses.map((expense, index) => (
+                      <tr key={index}>
+                        <td>{expense.partnerName}</td>
+                        <td>{expense.amount.toFixed(2)}</td>
+                        <td>{expense.date.toLocaleDateString()}</td>
+                        <td>{expense.comment}</td>
+                      </tr>
                     ))}
                   </tbody>
                 </Table>
               </TableContainer>
             )}
+
           </>
         )}
       </ContentContainer>

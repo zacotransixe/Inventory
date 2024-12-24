@@ -14,10 +14,40 @@ const Heading = styled.h1`
   font-weight: bold;
   text-align: center;
   color: #343a40;
-  margin-bottom: 1.5rem;
   font-family: Aptos Display;
 font-size:32px;
 `;
+
+const SearchBar = styled.div`
+  display: grid;
+  grid-template-columns: repeat(3, 1fr); /* Three equal columns */
+  gap: 20px; /* Increase gap between controls */
+  align-items: center;
+  background-color: #fff;
+  padding: 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  max-width: 100%;
+  margin-bottom: 20px;
+
+  /* Two rows for fields */
+  grid-template-rows: auto auto;
+`;
+
+const InputGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  grid-column: span 1; /* Occupy one column */
+  gap: 5px; /* Add space between label and input */
+`;
+
+const FullWidthGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  grid-column: span 2; /* Occupy two columns */
+  gap: 5px; /* Add space between label and input */
+`;
+
 
 // Styled Components
 const DashboardContainer = styled.div`
@@ -40,18 +70,6 @@ max-width:100%;
   margin-left: 20px; /* Add space between the sidebar and content */
 `;
 
-const SearchBar = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr auto auto;
-  gap: 15px;
-  align-items: center;
-  background-color: #fff;
-  padding: 1.5rem;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  max-width: 100%;
-  margin-bottom: 20px;
-`;
 
 const Input = styled.input`
   padding: 0.5rem;
@@ -195,12 +213,19 @@ const Loader = styled.div`
 const Dashboard = () => {
   const [loading, setLoading] = useState(false);
   const [searchResults, setSearchResults] = useState([]);
-  const [searchData, setSearchData] = useState({ fromDate: '', toDate: '' });
+  const [searchData, setSearchData] = useState({
+    fromDate: '',
+    toDate: '',
+    truckPlateNumber: '',
+    truckDriverName: '',
+    truckSupplierName: '',
+  });
+
   const [loggedIn, setLoggedIn] = useState(false);
   const [currentPage, setCurrentPage] = useState(1);
   const [userRole, setUserRole] = useState(''); // Add state for user role
 
-  const recordsPerPage = 5;
+  const recordsPerPage = 10;
 
   const formatDateTime = (date) => {
     if (!date) return '';
@@ -231,52 +256,56 @@ const Dashboard = () => {
     setSearchData((prevData) => ({ ...prevData, [name]: value }));
   };
 
+  const formatDate = (date) => {
+    if (!date) return '01-01-1'; // Return "01-01-1" explicitly for invalid or missing dates
+    const d = new Date(date.seconds ? date.seconds * 1000 : date); // Handle Firestore Timestamp or raw date
+    if (isNaN(d)) return '01-01-1'; // Explicitly return "01-01-1" for invalid dates
+
+    const day = String(d.getDate()).padStart(2, '0');
+    const month = String(d.getMonth() + 1).padStart(2, '0');
+    const year = d.getFullYear();
+    return `${day}-${month}-${year}`;
+  };
+
   const handleSearchSubmit = async () => {
     setLoading(true);
 
     try {
-      // Check and format dates if necessary
-      const formatDate = (date) => {
-        if (date.includes('-')) {
-          const parts = date.split('-');
-          if (parts[0].length === 4) {
-            // Already in YYYY-MM-DD format
-            return date;
-          } else {
-            // Convert from DD-MM-YYYY to YYYY-MM-DD
-            const [day, month, year] = parts;
-            return `${year}-${month}-${day}`;
-          }
-        }
-        return date;
-      };
+      const { fromDate, toDate, truckPlateNumber, truckDriverName, truckSupplierName } = searchData;
 
-      const fromDate = searchData.fromDate ? formatDate(searchData.fromDate) : null;
-      const toDate = searchData.toDate ? formatDate(searchData.toDate) : null;
-
-      console.log('Formatted From Date:', fromDate);
-      console.log('Formatted To Date:', toDate);
-
-      // Build the Firestore query
+      // Build Firestore query
       const searchQuery = query(
         collection(db, 'trips'),
         ...(fromDate ? [where('tripDate', '>=', fromDate)] : []),
-        ...(toDate ? [where('tripDate', '<=', toDate)] : [])
+        ...(toDate ? [where('tripDate', '<=', toDate)] : []),
+        ...(truckPlateNumber ? [where('truckPlateNumber', '==', truckPlateNumber)] : []),
+        ...(truckDriverName ? [where('truckDriverName', '==', truckDriverName)] : []),
+        ...(truckSupplierName ? [where('supplierName', '==', truckSupplierName)] : [])
       );
 
       const querySnapshot = await getDocs(searchQuery);
 
       // Process results
-      const results = querySnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-        created: formatDateTime(doc.data().created), // Format Firestore Timestamp
-      }));
+      const results = querySnapshot.docs.map((doc) => {
+        const data = doc.data();
+        const formattedInvoiceDate = formatDate(data.invoiceDate);
+        const formattedInvoiceNo = data.invoiceNo === 0 ? '0' : data.invoiceNo;
+
+        return {
+          id: doc.id,
+          ...data,
+          tripDate: formatDate(data.tripDate),
+          invoiceDate: (formattedInvoiceDate === '01-01-1') ? '-' : formattedInvoiceDate,
+          invoiceNo: (formattedInvoiceNo === '0') ? '-' : formattedInvoiceNo,
+          created: formatDateTime(data.created),
+        };
+      });
 
       if (results.length === 0) {
-        toast.info('No records found for the specified date range.');
+        setSearchResults([]); // Clear table
+        toast.info('No records found for the specified criteria.');
       } else {
-        setSearchResults(results);
+        setSearchResults(results); // Update table with results
       }
     } catch (error) {
       toast.error('Error fetching data: ' + error.message);
@@ -284,6 +313,9 @@ const Dashboard = () => {
       setLoading(false);
     }
   };
+
+
+
 
   // Calculate the paginated data
   const indexOfLastRecord = currentPage * recordsPerPage;
@@ -340,6 +372,7 @@ const Dashboard = () => {
       { label: 'Delivery Note', key: 'deliveryNote' },
       { label: 'Customer Name', key: 'customerName' },
       { label: 'C/O', key: 'cO' },
+      { label: 'Supplier Name', key: 'supplierName' },
       { label: 'First Loading', key: 'firstLoading' },
       { label: 'First Offloading', key: 'firstOffloading' },
       { label: 'Second Loading', key: 'secondLoading' },
@@ -354,6 +387,7 @@ const Dashboard = () => {
       { label: 'Transaction Amount Balance', key: 'transactionAmountBalance' },
       { label: 'Invoice No', key: 'invoiceNo' },
       { label: 'Invoice Date', key: 'invoiceDate' },
+      { label: 'Remarks', key: 'remarks' },
       { label: 'Created Date', key: 'created' },
     ];
 
@@ -384,14 +418,61 @@ const Dashboard = () => {
         <Heading>Trip Information</Heading>
 
         <SearchBar>
-          <InputWrapper>
-            <InputLabel>Start Date</InputLabel>
-            <Input type="date" name="fromDate" value={searchData.fromDate} onChange={handleSearchInputChange} />
-          </InputWrapper>
-          <InputWrapper>
-            <InputLabel>End Date</InputLabel>
-            <Input type="date" name="toDate" value={searchData.toDate} onChange={handleSearchInputChange} />
-          </InputWrapper>
+          {/* Row 1: From Date and To Date */}
+          <InputGroup>
+            <InputLabel>From Date</InputLabel>
+            <Input
+              type="date"
+              name="fromDate"
+              value={searchData.fromDate}
+              onChange={handleSearchInputChange}
+            />
+          </InputGroup>
+          <InputGroup>
+            <InputLabel>To Date</InputLabel>
+            <Input
+              type="date"
+              name="toDate"
+              value={searchData.toDate}
+              onChange={handleSearchInputChange}
+            />
+          </InputGroup>
+          <div></div>
+          <div></div>
+          {/* Spacer for alignment */}
+
+          {/* Row 2: Other fields */}
+          <InputGroup>
+            <InputLabel>Truck Plate Number</InputLabel>
+            <Input
+              type="text"
+              name="truckPlateNumber"
+              value={searchData.truckPlateNumber}
+              onChange={handleSearchInputChange}
+              placeholder="Enter Truck Plate Number"
+            />
+          </InputGroup>
+          <InputGroup>
+            <InputLabel>Truck Driver Name</InputLabel>
+            <Input
+              type="text"
+              name="truckDriverName"
+              value={searchData.truckDriverName}
+              onChange={handleSearchInputChange}
+              placeholder="Enter Truck Driver Name"
+            />
+          </InputGroup>
+          <InputGroup>
+            <InputLabel>Truck Supplier Name</InputLabel>
+            <Input
+              type="text"
+              name="truckSupplierName"
+              value={searchData.truckSupplierName}
+              onChange={handleSearchInputChange}
+              placeholder="Enter Truck Supplier Name"
+            />
+          </InputGroup>
+
           <ButtonGroup>
             <Button color="#002985" onClick={handleSearchSubmit}><FaSearch /> Search</Button>
             {loggedIn && (
@@ -403,7 +484,9 @@ const Dashboard = () => {
               </>
             )}
           </ButtonGroup>
+
         </SearchBar>
+
 
 
 
@@ -423,6 +506,7 @@ const Dashboard = () => {
                       <TableCell>Delivery Note</TableCell>
                       <TableCell>Customer Name</TableCell>
                       <TableCell>C/O</TableCell>
+                      <TableCell>Supplier Name</TableCell>
                       <TableCell>First Loading</TableCell>
                       <TableCell>First Offloading</TableCell>
                       <TableCell>Second Loading</TableCell>
@@ -437,6 +521,7 @@ const Dashboard = () => {
                       <TableCell>Amount Balance</TableCell>
                       <TableCell>Invoice No</TableCell>
                       <TableCell>Invoice Date</TableCell>
+                      <TableCell>Remarks</TableCell>
                       <TableCell>Created</TableCell>
                       <TableCell>Action</TableCell>
                     </TableRow>
@@ -451,6 +536,7 @@ const Dashboard = () => {
                         <TableCell>{result.deliveryNote}</TableCell>
                         <TableCell>{result.customerName}</TableCell>
                         <TableCell>{result.cO}</TableCell>
+                        <TableCell>{result.supplierName}</TableCell>
                         <TableCell>{result.firstLoading}</TableCell>
                         <TableCell>{result.firstOffloading}</TableCell>
                         <TableCell>{result.secondLoading}</TableCell>
@@ -465,6 +551,7 @@ const Dashboard = () => {
                         <TableCell>{result.transactionAmountBalance}</TableCell>
                         <TableCell>{result.invoiceNo}</TableCell>
                         <TableCell>{result.invoiceDate}</TableCell>
+                        <TableCell>{result.remarks}</TableCell>
                         <TableCell>{result.created}</TableCell>
                         <TableCell>
                           {userRole !== 'User' && ( // Only show buttons if the role is not 'User'

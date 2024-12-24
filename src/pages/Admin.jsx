@@ -10,6 +10,8 @@ import {
   deleteDoc,
   updateDoc
 } from 'firebase/firestore';
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
 
 const AdminContainer = styled.div`
   display: flex;
@@ -198,6 +200,148 @@ const Admin = () => {
     role: 'User',
     tempPassword: ''
   });
+  const [partnerInvestmentData, setPartnerInvestmentData] = useState({
+    partnerName: '',
+    date: '',
+    type: 'Investment',
+    remarks: '',
+    amount: '',
+  });
+  const [investmentTableData, setInvestmentTableData] = useState([]);
+  const [filteredInvestmentData, setFilteredInvestmentData] = useState([]);
+  const [partners, setPartners] = useState([]);
+
+
+
+
+  // Fetch partners from Firebase
+  useEffect(() => {
+    const fetchPartners = async () => {
+      const collectionRef = collection(db, 'adminData');
+      const snapshot = await getDocs(collectionRef);
+      const partnerList = snapshot.docs.map((doc) => ({
+        id: doc.id,
+        name: doc.data().name,
+      }));
+      setPartners(partnerList);
+    };
+
+    fetchPartners();
+  }, []);
+
+  const [filterData, setFilterData] = useState({
+    fromDate: '',
+    toDate: '',
+    partnerName: '',
+  });
+
+  const handleFilterInvestments = () => {
+    let filteredData = investmentTableData;
+
+
+
+    if (filterData.partnerName) {
+      filteredData = filteredData.filter(
+        (investment) => investment.partnerName === filterData.partnerName
+      );
+    }
+
+    setInvestmentTableData(filteredData);
+  };
+
+
+
+  const handleEditInvestment = (investment) => {
+    setPartnerInvestmentData(investment);
+    setEditingId(investment.id); // Set editing ID
+  };
+
+
+
+  // Handle Delete Investment
+  const handleDeleteInvestment = async (id) => {
+    const confirmDelete = window.confirm('Are you sure you want to delete this investment?');
+    if (confirmDelete) {
+      try {
+        await deleteDoc(doc(db, 'partnerInvestments', id));
+        setInvestmentTableData(investmentTableData.filter((item) => item.id !== id));
+        toast.success('Investment deleted successfully.');
+      } catch (error) {
+        toast.error('Error deleting investment: ' + error.message);
+      }
+    }
+  };
+
+  // Handle cancel edit
+  const handlePartnerCancelEdit = () => {
+    setPartnerInvestmentData({ partnerName: '', date: '', type: 'Investment', remarks: '', amount: '' });
+    setEditingId(null); // Exit edit mode
+  };
+
+
+  // Fetch investment data from Firebase
+  const fetchInvestmentData = async () => {
+    const collectionRef = collection(db, 'partnerInvestments');
+    const snapshot = await getDocs(collectionRef);
+    const investmentData = snapshot.docs.map((doc) => ({
+      id: doc.id,
+      ...doc.data(),
+    }));
+    // Sort by date descending
+    const sortedData = investmentData.sort((a, b) => new Date(b.date) - new Date(a.date));
+    setInvestmentTableData(sortedData); // Set original data
+    setFilteredInvestmentData(sortedData); // Set filtered data initially
+    // 
+  };
+
+  useEffect(() => {
+    fetchInvestmentData();
+  }, []);
+
+  const handlePartnerInvestmentChange = (e) => {
+    const { name, value } = e.target;
+    setPartnerInvestmentData((prevData) => ({
+      ...prevData,
+      [name]: value,
+    }));
+  };
+
+  const handleSaveInvestment = async () => {
+    const { partnerName, date, type, remarks, amount } = partnerInvestmentData;
+
+    if (!partnerName || !date || !type || !amount) {
+      toast.error('Please fill in all required fields.');
+      return;
+    }
+
+    try {
+      if (editingId) {
+        // Update investment
+        const docRef = doc(db, 'partnerInvestments', editingId);
+        await updateDoc(docRef, partnerInvestmentData);
+        setInvestmentTableData(
+          investmentTableData.map((item) =>
+            item.id === editingId ? { id: editingId, ...partnerInvestmentData } : item
+          )
+        );
+        toast.success('Investment updated successfully!');
+      } else {
+        // Add new investment
+        const collectionRef = collection(db, 'partnerInvestments');
+        const newDoc = await addDoc(collectionRef, partnerInvestmentData);
+        const newData = { id: newDoc.id, ...partnerInvestmentData };
+        const updatedData = [newData, ...investmentTableData]; // Add new data at the top
+        setInvestmentTableData(updatedData);
+        setFilteredInvestmentData(updatedData); // Update filtered data as well
+        toast.success('Investment added successfully!');
+      }
+
+      setPartnerInvestmentData({ partnerName: '', date: '', type: 'Investment', remarks: '', amount: '' });
+      setEditingId(null);
+    } catch (error) {
+      toast.error('Error saving investment: ' + error.message);
+    }
+  };
 
   const [partnerFormData, setPartnerFormData] = useState({
     name: '',
@@ -404,7 +548,9 @@ const Admin = () => {
           <Tab active={activeTab === 'UserManagement'} onClick={() => handleTabSwitch('UserManagement')}>
             User Management
           </Tab>
-
+          <Tab active={activeTab === 'PartnerInvestment'} onClick={() => handleTabSwitch('PartnerInvestment')}>
+            Partner Investment
+          </Tab>
         </TabContainer>
 
         {activeTab === 'PartnerManagement' && (
@@ -465,7 +611,7 @@ const Admin = () => {
                 )}
               </InputRow>
               {!editingId ? (
-                <StyledButton onClick={handleAdd}>Add</StyledButton>
+                <StyledButton onClick={handleAdd}>Add Partner</StyledButton>
               ) : (
                 <ActionButtons>
                   <StyledButton variant="edit" onClick={handleSaveEdit}>
@@ -605,6 +751,111 @@ const Admin = () => {
             </TableContainer>
 
 
+          </>
+        )}
+        {activeTab === 'PartnerInvestment' && (
+          <>
+            {/* Form to Add/Edit Investment */}
+            <FormBox>
+              <InputRow>
+                <InputField>
+                  <label>Partner</label>
+                  <select
+                    name="partnerName"
+                    value={partnerInvestmentData.partnerName}
+                    onChange={handlePartnerInvestmentChange}
+                  >
+                    <option value="">Select Partner</option>
+                    {partners.map((partner) => (
+                      <option key={partner.id} value={partner.name}>
+                        {partner.name}
+                      </option>
+                    ))}
+                  </select>
+                </InputField>
+                <InputField>
+                  <label>Date</label>
+                  <input
+                    type="date"
+                    name="date"
+                    value={partnerInvestmentData.date}
+                    onChange={handlePartnerInvestmentChange}
+                  />
+                </InputField>
+                <InputField>
+                  <label>Type</label>
+                  <select
+                    name="type"
+                    value={partnerInvestmentData.type}
+                    onChange={handlePartnerInvestmentChange}
+                  >
+                    <option value="Investment">Investment</option>
+                    <option value="Payment">Payment</option>
+                  </select>
+                </InputField>
+                <InputField>
+                  <label>Amount</label>
+                  <input
+                    type="number"
+                    name="amount"
+                    value={partnerInvestmentData.amount}
+                    onChange={handlePartnerInvestmentChange}
+                    placeholder="Enter Amount"
+                  />
+                </InputField>
+                <InputField>
+                  <label>Remarks</label>
+                  <input
+                    type="text"
+                    name="remarks"
+                    value={partnerInvestmentData.remarks}
+                    onChange={handlePartnerInvestmentChange}
+                    placeholder="Enter Remarks"
+                  />
+                </InputField>
+              </InputRow>
+              <ActionButtons>
+                <StyledButton onClick={handleSaveInvestment}>
+                  {editingId ? 'Update' : 'Save'}
+                </StyledButton>
+                {editingId && (
+                  <DeleteButton onClick={handlePartnerCancelEdit}>Cancel</DeleteButton>
+                )}
+              </ActionButtons>
+            </FormBox>
+
+            {/* Investment Table */}
+            <TableContainer>
+              <Table>
+                <TableHeader>
+                  <tr>
+                    <th>Partner</th>
+                    <th>Date</th>
+                    <th>Type</th>
+                    <th>Amount</th>
+                    <th>Remarks</th>
+                    <th>Actions</th>
+                  </tr>
+                </TableHeader>
+                <TableBody>
+                  {investmentTableData.map((investment) => (
+                    <tr key={investment.id}>
+                      <td>{investment.partnerName}</td>
+                      <td>{investment.date}</td>
+                      <td>{investment.type}</td>
+                      <td>{investment.amount}</td>
+                      <td>{investment.remarks}</td>
+                      <td>
+                        <ActionButtons>
+                          <EditButton onClick={() => handleEditInvestment(investment)}>Edit</EditButton>
+                          <DeleteButton onClick={() => handleDeleteInvestment(investment.id)}>Delete</DeleteButton>
+                        </ActionButtons>
+                      </td>
+                    </tr>
+                  ))}
+                </TableBody>
+              </Table>
+            </TableContainer>
           </>
         )}
 
