@@ -548,9 +548,7 @@ const Admin = () => {
           <Tab active={activeTab === 'UserManagement'} onClick={() => handleTabSwitch('UserManagement')}>
             User Management
           </Tab>
-          <Tab active={activeTab === 'PartnerInvestment'} onClick={() => handleTabSwitch('PartnerInvestment')}>
-            Partner Investment
-          </Tab>
+
         </TabContainer>
 
         {activeTab === 'PartnerManagement' && (
