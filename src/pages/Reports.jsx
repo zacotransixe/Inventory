@@ -572,7 +572,7 @@ const Reports = () => {
         parseFloat(summary[key].customer.rate) + parseFloat(summary[key].customer.wait)
       ).toFixed(2);
       summary[key].customer.paid = summary[key].customer.paid.toFixed(2);
-      summary[key].customer.balance = summary[key].customer.balance.toFixed(2);
+      summary[key].customer.balance = (summary[key].customer.total - summary[key].customer.paid).toFixed(2);
 
       summary[key].driver.rate = summary[key].driver.rate.toFixed(2);
       summary[key].driver.wait = summary[key].driver.wait.toFixed(2);
@@ -580,7 +580,7 @@ const Reports = () => {
         parseFloat(summary[key].driver.rate) + parseFloat(summary[key].driver.wait)
       ).toFixed(2);
       summary[key].driver.paid = summary[key].driver.paid.toFixed(2);
-      summary[key].driver.balance = summary[key].driver.balance.toFixed(2);
+      summary[key].driver.balance = (summary[key].driver.total - summary[key].driver.paid).toFixed(2);
     });
 
     return summary;
@@ -735,7 +735,11 @@ const Reports = () => {
 
   return (
     <ReportsContainer>
+
       <ContentContainer>
+        <h1 style={{ textAlign: "center", margin: "20px 0", fontSize: "2rem", color: "#333" }}>
+          Reports
+        </h1>
         <Header>
           <div>
             <label>

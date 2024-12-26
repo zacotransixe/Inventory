@@ -770,7 +770,7 @@ const PRT = () => {
     <PRTContainer>
       <ContentContainer>
         <Header>
-          <Title>Partner Management</Title>
+          <Title>Partner Expense and Investment</Title>
         </Header>
         <TabsContainer>
           <TabButton
