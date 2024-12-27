@@ -224,6 +224,7 @@ const Dashboard = () => {
     truckDriverName: '',
     truckSupplierName: '',
     customerName: '', // Add this
+    cO: '', // Add this
   });
 
   const [loggedIn, setLoggedIn] = useState(false);
@@ -286,8 +287,10 @@ const Dashboard = () => {
         ...(truckPlateNumber ? [where('truckPlateNumber', '==', truckPlateNumber)] : []),
         ...(truckDriverName ? [where('truckDriverName', '==', truckDriverName)] : []),
         ...(truckSupplierName ? [where('supplierName', '==', truckSupplierName)] : []),
-        ...(customerName ? [where('customerName', '==', customerName)] : [])
+        ...(customerName ? [where('customerName', '==', customerName)] : []),
+        ...(searchData.cO ? [where('cO', '==', searchData.cO)] : []) // Add C/O condition
       );
+
 
       const querySnapshot = await getDocs(searchQuery);
 
@@ -492,6 +495,18 @@ const Dashboard = () => {
               value={searchData.customerName}
               onChange={handleSearchInputChange}
               placeholder="Enter Customer Name"
+            />
+          </InputGroup>
+
+          {/* C/O */}
+          <InputGroup>
+            <InputLabel>C/O</InputLabel>
+            <Input
+              type="text"
+              name="cO"
+              value={searchData.cO}
+              onChange={handleSearchInputChange}
+              placeholder="Enter C/O"
             />
           </InputGroup>
 
