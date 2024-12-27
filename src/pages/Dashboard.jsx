@@ -18,28 +18,7 @@ const Heading = styled.h1`
 font-size:32px;
 `;
 
-const SearchBar = styled.div`
-  display: grid;
-  grid-template-columns: repeat(3, 1fr); /* Three equal columns */
-  gap: 20px; /* Increase gap between controls */
-  align-items: center;
-  background-color: #fff;
-  padding: 1.5rem;
-  border-radius: 10px;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-  max-width: 100%;
-  margin-bottom: 20px;
 
-  /* Two rows for fields */
-  grid-template-rows: auto auto;
-`;
-
-const InputGroup = styled.div`
-  display: flex;
-  flex-direction: column;
-  grid-column: span 1; /* Occupy one column */
-  gap: 5px; /* Add space between label and input */
-`;
 
 const FullWidthGroup = styled.div`
   display: flex;
@@ -70,6 +49,38 @@ max-width:100%;
   margin-left: 20px; /* Add space between the sidebar and content */
 `;
 
+const SearchBar = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, 1fr); /* Two columns per row */
+  gap: 20px; /* Space between fields */
+  align-items: center;
+  background-color: #fff;
+  padding: 1.5rem;
+  border-radius: 10px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  max-width: 100%;
+  margin-bottom: 20px;
+
+  /* Adjust for smaller screens */
+  @media (max-width: 768px) {
+    grid-template-columns: 1fr; /* One column for small screens */
+  }
+`;
+
+const InputGroup = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 5px; /* Space between label and input */
+`;
+
+const ButtonGroup = styled.div`
+  grid-column: span 2; /* Buttons span across both columns */
+  display: flex;
+  justify-content: flex-end;
+  gap: 15px; /* Space between buttons */
+`;
+
+
 
 const Input = styled.input`
   padding: 0.5rem;
@@ -96,13 +107,6 @@ const InputLabel = styled.label`
 
   margin-bottom: 5px;
     font-size: 16px;
-`;
-
-const ButtonGroup = styled.div`
-  display: flex;
-  gap: 10px;
-  justify-content: flex-end;
-  grid-column: span 4;
 `;
 
 const RightSideContainer = styled.div`
@@ -219,6 +223,7 @@ const Dashboard = () => {
     truckPlateNumber: '',
     truckDriverName: '',
     truckSupplierName: '',
+    customerName: '', // Add this
   });
 
   const [loggedIn, setLoggedIn] = useState(false);
@@ -271,7 +276,7 @@ const Dashboard = () => {
     setLoading(true);
 
     try {
-      const { fromDate, toDate, truckPlateNumber, truckDriverName, truckSupplierName } = searchData;
+      const { fromDate, toDate, truckPlateNumber, truckDriverName, truckSupplierName, customerName } = searchData;
 
       // Build Firestore query
       const searchQuery = query(
@@ -280,7 +285,8 @@ const Dashboard = () => {
         ...(toDate ? [where('tripDate', '<=', toDate)] : []),
         ...(truckPlateNumber ? [where('truckPlateNumber', '==', truckPlateNumber)] : []),
         ...(truckDriverName ? [where('truckDriverName', '==', truckDriverName)] : []),
-        ...(truckSupplierName ? [where('supplierName', '==', truckSupplierName)] : [])
+        ...(truckSupplierName ? [where('supplierName', '==', truckSupplierName)] : []),
+        ...(customerName ? [where('customerName', '==', customerName)] : [])
       );
 
       const querySnapshot = await getDocs(searchQuery);
@@ -313,6 +319,7 @@ const Dashboard = () => {
       setLoading(false);
     }
   };
+
 
 
 
@@ -418,7 +425,7 @@ const Dashboard = () => {
         <Heading>Trip Information</Heading>
 
         <SearchBar>
-          {/* Row 1: From Date and To Date */}
+          {/* From Date */}
           <InputGroup>
             <InputLabel>From Date</InputLabel>
             <Input
@@ -428,6 +435,8 @@ const Dashboard = () => {
               onChange={handleSearchInputChange}
             />
           </InputGroup>
+
+          {/* To Date */}
           <InputGroup>
             <InputLabel>To Date</InputLabel>
             <Input
@@ -437,11 +446,8 @@ const Dashboard = () => {
               onChange={handleSearchInputChange}
             />
           </InputGroup>
-          <div></div>
-          <div></div>
-          {/* Spacer for alignment */}
 
-          {/* Row 2: Other fields */}
+          {/* Truck Plate Number */}
           <InputGroup>
             <InputLabel>Truck Plate Number</InputLabel>
             <Input
@@ -452,6 +458,8 @@ const Dashboard = () => {
               placeholder="Enter Truck Plate Number"
             />
           </InputGroup>
+
+          {/* Truck Driver Name */}
           <InputGroup>
             <InputLabel>Truck Driver Name</InputLabel>
             <Input
@@ -462,6 +470,8 @@ const Dashboard = () => {
               placeholder="Enter Truck Driver Name"
             />
           </InputGroup>
+
+          {/* Truck Supplier Name */}
           <InputGroup>
             <InputLabel>Truck Supplier Name</InputLabel>
             <Input
@@ -473,19 +483,38 @@ const Dashboard = () => {
             />
           </InputGroup>
 
+          {/* Customer Name */}
+          <InputGroup>
+            <InputLabel>Customer Name</InputLabel>
+            <Input
+              type="text"
+              name="customerName"
+              value={searchData.customerName}
+              onChange={handleSearchInputChange}
+              placeholder="Enter Customer Name"
+            />
+          </InputGroup>
+
+          {/* Buttons */}
           <ButtonGroup>
-            <Button color="#002985" onClick={handleSearchSubmit}><FaSearch /> Search</Button>
+            <Button color="#002985" onClick={handleSearchSubmit}>
+              <FaSearch /> Search
+            </Button>
             {loggedIn && (
               <>
-                <Button color="#002985" onClick={handleExport}><FaFileExport /> Export</Button>
+                <Button color="#002985" onClick={handleExport}>
+                  <FaFileExport /> Export
+                </Button>
                 {userRole !== 'User' && (
-                  <Button color="#28a745" onClick={openNewTab}><FaPlus /> Add New</Button>
+                  <Button color="#28a745" onClick={openNewTab}>
+                    <FaPlus /> Add New
+                  </Button>
                 )}
               </>
             )}
           </ButtonGroup>
-
         </SearchBar>
+
 
 
 
