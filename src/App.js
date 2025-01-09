@@ -21,7 +21,8 @@ const App = () => {
     <Router>
       <Routes>
         <Route path="/" element={<NonPaymentPage />} />
-        <Route path="/login" element={<Login />} />
+
+        {/* <Route path="/login" element={<Login />} />
         <Route path="/home" element={<Home />} />
         <Route path="/trips" element={<Dashboard />} />
         <Route path="/addnewtrip" element={<AddNewTrip />} />
@@ -31,9 +32,10 @@ const App = () => {
         <Route path="/expenses" element={<Expenses />} />
         <Route path="/reports" element={<Reports />} />
         <Route path="/customers" element={<Customers />} />
-        <Route path="/prt" element={<PRT />} /> {/* Add route for PRT */}
-        <Route path="/admin" element={<Admin />} /> {/* Add route for Admin */}
-        <Route path="/change-password" element={<ChangePassword />} /> {/* Add route for About */}
+        <Route path="/prt" element={<PRT />} /> 
+        <Route path="/admin" element={<Admin />} /> 
+        <Route path="/change-password" element={<ChangePassword />} /> Add route for About
+        */}
 
         {/* Add other routes here */}
       </Routes>
