@@ -22,6 +22,23 @@ const App = () => {
       <Routes>
         <Route path="/" element={<NonPaymentPage />} />
 
+
+        <Route path="/login" element={<NonPaymentPage />} />
+        <Route path="/home" element={<NonPaymentPage />} />
+        <Route path="/trips" element={<NonPaymentPage />} />
+        <Route path="/addnewtrip" element={<NonPaymentPage />} />
+        <Route path="/add-new-expense" element={<NonPaymentPage />} />
+        <Route path="/add-new-customer" element={<NonPaymentPage />} />
+
+        <Route path="/expenses" element={<NonPaymentPage />} />
+        <Route path="/reports" element={<NonPaymentPage />} />
+        <Route path="/customers" element={<NonPaymentPage />} />
+        <Route path="/prt" element={<NonPaymentPage />} />
+        <Route path="/admin" element={<NonPaymentPage />} />
+        <Route path="/change-password" element={<NonPaymentPage />} />
+
+
+
         {/* <Route path="/login" element={<Login />} />
         <Route path="/home" element={<Home />} />
         <Route path="/trips" element={<Dashboard />} />
