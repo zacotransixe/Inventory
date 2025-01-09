@@ -58,10 +58,9 @@ const NonPaymentPage = () => {
             <MessageContainer>
                 <Heading>Site Temporarily Unavailable</Heading>
                 <Message>
-                    Due to <Highlight>non-payment</Highlight>, this site is currently unavailable. Please contact the admin for
+                    Due to <Highlight>non-payment</Highlight>, this site is currently unavailable. Please contact the Hosting/Developer team for
                     more information and to resolve the issue.
                 </Message>
-                <ContactButton >Contact Admin</ContactButton>
             </MessageContainer>
         </NonPaymentPageContainer>
     );
