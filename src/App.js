@@ -13,12 +13,15 @@ import AddNewTrip from './pages/AddNewTrip';
 import AddNewExpense from './pages/AddNewExpense';
 import AddNewCustomer from './pages/AddNewCustomer';
 import ChangePassword from './pages/ChangePassword';
+import NonPaymentPage from './pages/NonPaymentPage';
+
 
 const App = () => {
   return (
     <Router>
       <Routes>
-        <Route path="/" element={<Login />} />
+        <Route path="/" element={<NonPaymentPage />} />
+        <Route path="/login" element={<Login />} />
         <Route path="/home" element={<Home />} />
         <Route path="/trips" element={<Dashboard />} />
         <Route path="/addnewtrip" element={<AddNewTrip />} />
