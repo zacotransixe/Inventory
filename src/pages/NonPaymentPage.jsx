@@ -31,6 +31,8 @@ const Message = styled.p`
 const Highlight = styled.span`
   color: red;
   font-weight: bold;
+    font-size: 22px;
+
 `;
 
 const ContactButton = styled.button`
