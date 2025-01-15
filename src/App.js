@@ -38,8 +38,6 @@ const App = () => {
         <Route path="/change-password" element={<ChangePassword />}
         />
 
-
-        {/* Add other routes here */}
       </Routes>
     </Router>
   );
