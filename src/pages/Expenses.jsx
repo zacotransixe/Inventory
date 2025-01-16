@@ -233,6 +233,32 @@ const Expenses = () => {
     }
   };
 
+  const parseDate = (dateString) => {
+    // Trim whitespace and validate the format YYYY-MM-DD using a regular expression
+    const trimmedDate = dateString.trim();
+    const datePattern = /^\d{4}-\d{2}-\d{2}$/;
+
+    if (!datePattern.test(trimmedDate)) {
+      console.error(`Invalid date format: ${dateString}`);
+      return null;
+    }
+
+    // Extract year, month, and day components
+    const [year, month, day] = trimmedDate.split('-').map(Number);
+
+    // Create a Date object using the extracted components
+    const date = new Date(year, month - 1, day); // Month is zero-based in JavaScript Date
+
+    // Check for invalid date (e.g., February 30)
+    if (isNaN(date.getTime()) || date.getDate() !== day) {
+      console.error(`Invalid date value: ${dateString}`);
+      return null;
+    }
+
+    return date;
+  };
+
+
 
   const handleSearch = () => {
     if (!fromDate || !toDate) {
@@ -241,19 +267,40 @@ const Expenses = () => {
     }
 
     setLoading(true);
-    const from = new Date(fromDate).getTime();
-    const to = new Date(toDate).getTime();
 
+    // Parse input dates
+    const fromDateObj = parseDate(fromDate);
+    const toDateObj = parseDate(toDate);
+
+    // Check for invalid dates
+    if (!fromDateObj || !toDateObj) {
+      toast.error('One or both of the selected dates are invalid.');
+      setLoading(false);
+      return;
+    }
+
+    // Convert to timestamps for comparison
+    const fromTimestamp = fromDateObj.getTime();
+    const toTimestamp = toDateObj.getTime();
+
+    // Filter expenses
     const filtered = expensesData.filter((expense) => {
-      const expenseDate = new Date(
-        expense.date.split('-').reverse().join('-')
-      ).getTime();
-      return expenseDate >= from && expenseDate <= to;
+      const expenseDateObj = parseDate(expense.date);
+      if (!expenseDateObj) {
+        console.error(`Skipping invalid expense date: ${expense.date}`);
+        return false;
+      }
+      const expenseTimestamp = expenseDateObj.getTime();
+      return expenseTimestamp >= fromTimestamp && expenseTimestamp <= toTimestamp;
     });
 
     setFilteredExpenses(filtered);
     setLoading(false);
   };
+
+
+
+
 
   const handleAddExpense = () => {
     window.open('/add-new-expense', '_blank');

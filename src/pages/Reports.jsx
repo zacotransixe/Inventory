@@ -628,18 +628,11 @@ const Reports = () => {
 
 
   const generateMonthlyExpenses = (expenses = []) => {
-    if (!expenses || expenses.length === 0) {
-      return []; // Return empty array if no expenses
-    }
-
-    const summary = {};
-
-    expenses.forEach((expense) => {
+    return expenses.map((expense) => {
       let expenseDate;
-      // Check if `expense.date` is a Firestore Timestamp
       if (expense.date?.toDate) {
         expenseDate = expense.date.toDate(); // Convert Firestore Timestamp to JavaScript Date
-      } else if (typeof expense.date === 'string' || expense.date instanceof String) {
+      } else if (typeof expense.date === 'string') {
         expenseDate = new Date(expense.date); // Parse string to Date object
       } else {
         expenseDate = new Date(expense.date); // Assume it's already a valid Date or timestamp
@@ -648,27 +641,14 @@ const Reports = () => {
       // Check if the expenseDate is valid
       if (isNaN(expenseDate.getTime())) {
         console.warn('Invalid date in expense:', expense);
-        return; // Skip this expense if the date is invalid
+        return null; // Skip this expense if the date is invalid
       }
 
-      const year = expenseDate.getFullYear();
-      const month = String(expenseDate.getMonth() + 1).padStart(2, '0');
-      const key = `${year}-${month}`;
-
-      if (!summary[key]) {
-        summary[key] = {
-          year,
-          month,
-          totalExpenses: 0,
-        };
-      }
-
-      summary[key].totalExpenses += parseFloat(expense.amount || 0);
-    });
-
-    return Object.values(summary).sort(
-      (a, b) => new Date(a.year, a.month - 1) - new Date(b.year, b.month - 1)
-    );
+      return {
+        ...expense,
+        formattedDate: expenseDate.toLocaleDateString(), // Format as needed
+      };
+    }).filter(expense => expense !== null); // Filter out invalid expenses
   };
 
   // New Function: Generate First Load-Offload Summary
@@ -1037,15 +1017,16 @@ const Reports = () => {
             )}
             {activeTab === 3 && (
               <TableContainer>
-                <HeaderTitle>Monthly Expenses
+                <HeaderTitle>
+                  Monthly Expenses
                   <ExportButtonContainer>
                     <ExportButton
                       onClick={() =>
                         exportToCSV(
                           monthlyExpenses.map((expense) => ({
-                            Year: expense.year,
-                            Month: expense.month,
-                            TotalExpenses: expense.totalExpenses.toFixed(2),
+                            Date: expense.formattedDate,
+                            Title: expense.title,
+                            Amount: expense.amount,
                           })),
                           'MonthlyExpenses.csv'
                         )
@@ -1058,22 +1039,23 @@ const Reports = () => {
                 <MonthlyExpensesTable>
                   <thead>
                     <tr>
-                      <th>Year</th>
-                      <th>Month</th>
-                      <th>Expenses</th>
+                      <th>Date</th>
+                      <th>Title</th>
+                      <th>Amount</th>
                     </tr>
                   </thead>
                   <tbody>
                     {monthlyExpenses.map((expense, index) => (
                       <tr key={index}>
-                        <td>{expense.year}</td>
-                        <td>{expense.month}</td>
-                        <td>{expense.totalExpenses.toFixed(2)}</td>
+                        <td>{expense.formattedDate}</td>
+                        <td>{expense.title}</td>
+                        <td>{expense.amount}</td>
                       </tr>
                     ))}
                   </tbody>
                 </MonthlyExpensesTable>
               </TableContainer>
+
             )}
             {activeTab === 4 && (
               <TableContainer>

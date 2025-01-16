@@ -13,7 +13,6 @@ import AddNewTrip from './pages/AddNewTrip';
 import AddNewExpense from './pages/AddNewExpense';
 import AddNewCustomer from './pages/AddNewCustomer';
 import ChangePassword from './pages/ChangePassword';
-import NonPaymentPage from './pages/NonPaymentPage';
 
 
 const App = () => {
