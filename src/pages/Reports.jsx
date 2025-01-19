@@ -628,28 +628,48 @@ const Reports = () => {
 
 
   const generateMonthlyExpenses = (expenses = []) => {
-    return expenses.map((expense) => {
-      let expenseDate;
-      if (expense.date?.toDate) {
-        expenseDate = expense.date.toDate(); // Convert Firestore Timestamp to JavaScript Date
-      } else if (typeof expense.date === 'string') {
-        expenseDate = new Date(expense.date); // Parse string to Date object
-      } else {
-        expenseDate = new Date(expense.date); // Assume it's already a valid Date or timestamp
-      }
+    let totalAmount = 0;
 
-      // Check if the expenseDate is valid
-      if (isNaN(expenseDate.getTime())) {
-        console.warn('Invalid date in expense:', expense);
-        return null; // Skip this expense if the date is invalid
-      }
+    const formattedExpenses = expenses
+      .map((expense) => {
+        let expenseDate;
+        if (expense.date?.toDate) {
+          expenseDate = expense.date.toDate(); // Convert Firestore Timestamp to JavaScript Date
+        } else if (typeof expense.date === 'string') {
+          expenseDate = new Date(expense.date); // Parse string to Date object
+        } else {
+          expenseDate = new Date(expense.date); // Assume it's already a valid Date or timestamp
+        }
 
-      return {
-        ...expense,
-        formattedDate: expenseDate.toLocaleDateString(), // Format as needed
-      };
-    }).filter(expense => expense !== null); // Filter out invalid expenses
+        // Check if the expenseDate is valid
+        if (isNaN(expenseDate.getTime())) {
+          console.warn('Invalid date in expense:', expense);
+          return null; // Skip this expense if the date is invalid
+        }
+
+        // Add the expense amount to the total (ensure it's a valid number)
+        const amount = parseFloat(expense.amount) || 0;
+        totalAmount += amount;
+
+        return {
+          ...expense,
+          formattedDate: expenseDate.toLocaleDateString('en-GB'), // Format as DD/MM/YYYY
+          amount, // Ensure the amount is numeric for calculations
+        };
+      })
+      .filter((expense) => expense !== null); // Filter out invalid expenses
+
+    // Add the total as the last entry
+    formattedExpenses.push({
+      id: 'total', // Unique ID for the total row
+      title: 'Total',
+      formattedDate: '', // No date for the total row
+      amount: totalAmount.toFixed(2), // Format to 2 decimal places
+    });
+
+    return formattedExpenses;
   };
+
 
   // New Function: Generate First Load-Offload Summary
   const generateFirstLoadOffloadSummary = (trips) => {

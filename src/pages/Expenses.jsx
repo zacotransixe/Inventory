@@ -188,13 +188,9 @@ const formatDate = (dateString) => {
   const month = String(date.getMonth() + 1).padStart(2, '0'); // Months are 0-based
   const year = date.getFullYear();
 
-  // Format time as hh:mm:ss
-  const hours = String(date.getHours()).padStart(2, '0');
-  const minutes = String(date.getMinutes()).padStart(2, '0');
-  const seconds = String(date.getSeconds()).padStart(2, '0');
-
-  return `${day}-${month}-${year} ${hours}:${minutes}:${seconds}`;
+  return `${day}-${month}-${year}`;
 };
+
 
 
 const Expenses = () => {
@@ -217,13 +213,15 @@ const Expenses = () => {
     try {
       const expensesCollection = collection(db, 'expenses');
       const expenseSnapshot = await getDocs(expensesCollection);
-      const expensesList = expenseSnapshot.docs.map((doc) => ({
-        id: doc.id,
-        ...doc.data(),
-        date: doc.data().date.toDate
-          ? doc.data().date.toDate().toISOString().split('T')[0] // Get yyyy-mm-dd
-          : doc.data().date, // Fallback to the original date if not a Firestore Timestamp
-      }));
+      const expensesList = expenseSnapshot.docs
+        .map((doc) => ({
+          id: doc.id,
+          ...doc.data(),
+          date: doc.data().date.toDate
+            ? doc.data().date.toDate().toISOString().split('T')[0] // Get yyyy-mm-dd
+            : doc.data().date, // Fallback to the original date if not a Firestore Timestamp
+        }))
+        .sort((a, b) => new Date(a.date) - new Date(b.date)); // Sort by date in ascending order
       setExpensesData(expensesList);
       setFilteredExpenses(expensesList);
       setLoading(false);
@@ -232,6 +230,7 @@ const Expenses = () => {
       toast.error('Error fetching expenses: ' + error.message);
     }
   };
+
 
   const parseDate = (dateString) => {
     // Trim whitespace and validate the format YYYY-MM-DD using a regular expression
