@@ -357,6 +357,17 @@ const Dashboard = () => {
       try {
         // Delete the document from Firestore
         await deleteDoc(doc(db, 'trips', id));
+
+        // Save log in the Logs collection
+        await setDoc(doc(collection(db, "logs")), {
+          tripId: id,
+          deletedBy: user.uid, // Track who deleted
+          deletedByEmail: user.email, // Optional: Store user's email
+          deletedAt: serverTimestamp(), // Timestamp of deletion
+          previousData: deletedData, // Optional: Store deleted record details
+        });
+
+
         toast.success('Record deleted successfully!');
 
         // Remove the deleted record from the local state
